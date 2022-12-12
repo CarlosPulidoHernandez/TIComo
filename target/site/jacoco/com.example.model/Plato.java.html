@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Plato.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.model</a> &gt; <span class="el_source">Plato.java</span></div><h1>Plato.java</h1><pre class="source lang-java linenums">package com.example.model;
+import java.net.URL;
+import org.springframework.data.annotation.Id;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.mongodb.lang.NonNull;
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+public class Plato {
+	
+	@Id
+	private String id;
+	@NonNull
+	private String nombre;
+	@NonNull
+	private URL foto;
+	@NonNull
+	private String descripcion;
+	@NonNull
+	private double precio;
+	@NonNull
+	private boolean aptoVeganos;
+	@NonNull
+	private String idRestaurante;
+	
+<span class="fc" id="L26">	public Plato(String nombre, URL foto, String descripcion, double precio, boolean aptoVeganos, String idRestaurante) {</span>
+		
+		
+<span class="fc" id="L29">		this.nombre = nombre;</span>
+<span class="fc" id="L30">		this.foto = foto;</span>
+<span class="fc" id="L31">		this.descripcion = descripcion;</span>
+<span class="fc" id="L32">		this.precio = precio;</span>
+<span class="fc" id="L33">		this.aptoVeganos = aptoVeganos;</span>
+<span class="fc" id="L34">		this.idRestaurante = idRestaurante;</span>
+<span class="fc" id="L35">	}</span>
+	public String getIdRestaurante() {
+<span class="nc" id="L37">		return idRestaurante;</span>
+	}
+	public void setIdRestaurante(String idRestaurante) {
+<span class="nc" id="L40">		this.idRestaurante = idRestaurante;</span>
+<span class="nc" id="L41">	}</span>
+	public String getId() {
+<span class="nc" id="L43">		return id;</span>
+	}
+	public void setId(String id) {
+<span class="nc" id="L46">		this.id = id;</span>
+<span class="nc" id="L47">	}</span>
+	public String getNombre() {
+<span class="fc" id="L49">		return nombre;</span>
+	}
+	public void setNombre(String nombre) {
+<span class="nc" id="L52">		this.nombre = nombre;</span>
+<span class="nc" id="L53">	}</span>
+	public URL getFoto() {
+<span class="nc" id="L55">		return foto;</span>
+	}
+	public void setFoto(URL foto) {
+<span class="nc" id="L58">		this.foto = foto;</span>
+<span class="nc" id="L59">	}</span>
+	public String getDescripcion() {
+<span class="nc" id="L61">		return descripcion;</span>
+	}
+	public void setDescripcion(String descripcion) {
+<span class="nc" id="L64">		this.descripcion = descripcion;</span>
+<span class="nc" id="L65">	}</span>
+	public double getPrecio() {
+<span class="fc" id="L67">		return precio;</span>
+	}
+	public void setPrecio(double precio) {
+<span class="nc" id="L70">		this.precio = precio;</span>
+<span class="nc" id="L71">	}</span>
+	public boolean isAptoVeganos() {
+<span class="nc" id="L73">		return aptoVeganos;</span>
+	}
+	public void setAptoVeganos(boolean aptoVeganos) {
+<span class="nc" id="L76">		this.aptoVeganos = aptoVeganos;</span>
+<span class="nc" id="L77">	}</span>
+	@Override
+	public String toString() {
+<span class="nc" id="L80">		return &quot;Plato [id=&quot; + id + &quot;, nombre=&quot; + nombre + &quot;, foto=&quot; + foto + &quot;, descripcion=&quot; + descripcion</span>
+				+ &quot;, precio=&quot; + precio + &quot;, aptoVeganos=&quot; + aptoVeganos + &quot;, idRestaurante=&quot; + idRestaurante + &quot;]&quot;;
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

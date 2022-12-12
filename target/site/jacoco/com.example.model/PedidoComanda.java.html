@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PedidoComanda.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.model</a> &gt; <span class="el_source">PedidoComanda.java</span></div><h1>PedidoComanda.java</h1><pre class="source lang-java linenums">package com.example.model;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.data.annotation.Id;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
+/*Clase del modelo representativa a una comanda realizada por un usuario*/
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+public class PedidoComanda {
+	/*====================================================*/
+	//VARIABLES
+	//comanda : un diccionario que usaremos para anotar el id del plato junto al número de unidades del mismo
+<span class="fc" id="L17">	private Map&lt;String, String&gt; comanda = new HashMap&lt;&gt;();</span>
+	//idPedido : id para identificar el pedido
+	@Id
+	private String id;
+	//estadoPedido : estado inicial del pedido, asignado como Pedido Realizado al principio, y En Preparacion/En reparto o Pedido Finalizado
+	//Según avanza su estado
+	private String estadoPedido;
+	//precio : precio total de la comanda
+	private double precioComanda;
+	//cliente : variable que permite relacionar al cliente con el pedido. Es el primer elemento de la comanda
+	private String nifCliente;
+	//restaurante : variable que permite relacionar al restaurante del que se piden los platos con el pedido. Es el segundo elemento de la comanda
+	private String idRestaurante;
+	//fechaPedido : variable que indica cual es la fecha en la que se crea el pedido
+	private Date fecha;
+	//idRider : variable que identifica al rider asociado al pedido
+	private String idRider;
+
+	
+	/*====================================================*/
+	//MÉTODOS
+	
+	
+	/*Constructor de la clase*/
+	public PedidoComanda(String id,Map&lt;String,String&gt; comanda,String estadoPedido, 
+	double precioComanda, String nifCliente,String idRestaurante,Date fecha,String idRider)
+<span class="fc" id="L43">	{</span>
+		
+<span class="fc" id="L45">		this.comanda = comanda;</span>
+<span class="fc" id="L46">		this.id = id;</span>
+<span class="fc" id="L47">		this.estadoPedido = estadoPedido;</span>
+<span class="fc" id="L48">		this.precioComanda = precioComanda;</span>
+<span class="fc" id="L49">		this.nifCliente = nifCliente;</span>
+<span class="fc" id="L50">		this.idRestaurante = idRestaurante;</span>
+<span class="fc" id="L51">		this.fecha = fecha;</span>
+<span class="fc" id="L52">		this.idRider =idRider;</span>
+		
+<span class="fc" id="L54">	}</span>
+	
+	/*
+	 * Getters y setters útiles para modificar la comanda
+	 * */
+
+<span class="fc" id="L60">	public PedidoComanda() {</span>
+<span class="fc" id="L61">	}</span>
+
+	public Map&lt;String, String&gt; getComanda() {
+<span class="fc" id="L64">		return comanda;</span>
+	}
+
+	public void setComanda(Map&lt;String, String&gt; comanda) {
+<span class="nc" id="L68">		this.comanda = comanda;</span>
+<span class="nc" id="L69">	}</span>
+
+	public String getId() {
+<span class="fc" id="L72">		return id;</span>
+	}
+
+	public void setId(String id) {
+<span class="fc" id="L76">		this.id = id;</span>
+<span class="fc" id="L77">	}</span>
+
+	public String getEstadoPedido() {
+<span class="fc" id="L80">		return estadoPedido;</span>
+	}
+
+	public void setEstadoPedido(String estadoPedido) {
+<span class="fc" id="L84">		this.estadoPedido = estadoPedido;</span>
+<span class="fc" id="L85">	}</span>
+
+	public double getPrecioComanda() {
+<span class="fc" id="L88">		return precioComanda;</span>
+	}
+
+	public void setPrecioComanda(double precioComanda) {
+<span class="fc" id="L92">		this.precioComanda = precioComanda;</span>
+<span class="fc" id="L93">	}</span>
+
+	public String getNifCliente() {
+<span class="fc" id="L96">		return nifCliente;</span>
+	}
+
+	public void setNifCliente(String nifCliente) {
+<span class="nc" id="L100">		this.nifCliente = nifCliente;</span>
+<span class="nc" id="L101">	}</span>
+
+	public String getIdRestaurante() {
+<span class="nc" id="L104">		return idRestaurante;</span>
+	}
+
+	public void setIdRestaurante(String idRestaurante) {
+<span class="nc" id="L108">		this.idRestaurante = idRestaurante;</span>
+<span class="nc" id="L109">	}</span>
+
+	public Date getFecha() {
+<span class="fc" id="L112">		return fecha;</span>
+	}
+
+	public void setFecha(Date fecha) {
+<span class="nc" id="L116">		this.fecha = fecha;</span>
+<span class="nc" id="L117">	}</span>
+
+	public String getIdRider() {
+<span class="nc" id="L120">		return idRider;</span>
+	}
+
+	public void setIdRider(String idRider) {
+<span class="nc" id="L124">		this.idRider = idRider;</span>
+<span class="nc" id="L125">	}</span>
+	
+	/*
+	 * Método toString de la clase
+	 * */
+	
+	@Override
+	public String toString() {
+<span class="nc" id="L133">		return &quot;PedidoComanda [comanda=&quot; + comanda + &quot;, id=&quot; + id + &quot;, estadoPedido=&quot; + estadoPedido</span>
+				+ &quot;, precioComanda=&quot; + precioComanda + &quot;, nifCliente=&quot; + nifCliente + &quot;, idRestaurante=&quot; + idRestaurante
+				+ &quot;, fecha=&quot; + fecha + &quot;, idRider=&quot; + idRider + &quot;]&quot;;
+	}
+	
+	
+		
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlatoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.service</a> &gt; <span class="el_source">PlatoService.java</span></div><h1>PlatoService.java</h1><pre class="source lang-java linenums">package com.example.service;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.example.exceptions.IlegalNumberException;
+import com.example.exceptions.IncompleteFormException;
+import com.example.model.Plato;
+
+import com.example.repository.PlatosRepository;
+
+/*
+ * Clase que representa el servicio de los platos de los restaurantes
+ * */
+@Service
+@RequestMapping(&quot;/Platos&quot;)
+<span class="fc" id="L21">public class PlatoService {</span>
+	/*================================================*/
+	//VARIABLES
+	//platoRepo : permite acceder al repositorio de Platos y hacer consultas a la BBDD. Solo lo conoce esta clase
+	@Autowired
+	private PlatosRepository platoRepo;
+	
+		
+	/*
+	 * Mediante éste método vamos a obtener la lista de los platos correspondientes
+	 * a un determinado restaurante mediante su id
+	 * 
+	 * */
+	public List&lt;Plato&gt; getPlatosByIdRestaurante(String idRestaurante){
+<span class="nc" id="L35">		List&lt;Plato&gt; totalPlatos = platoRepo.findAll();</span>
+<span class="nc" id="L36">		List&lt;Plato&gt; platosRestaurante = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L37" title="All 2 branches missed.">		for(int i =0; i&lt; totalPlatos.size();i++) {</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">			if (idRestaurante.equalsIgnoreCase(totalPlatos.get(i).getIdRestaurante())) {</span>
+<span class="nc" id="L39">				platosRestaurante.add(totalPlatos.get(i));</span>
+			}
+		}
+<span class="nc" id="L42">		return platosRestaurante;</span>
+	}
+	
+	
+	/**
+	 * Guardamos un plato el cual va a pertenecer a un restaurante mediante su id
+	 */
+	public void save(Plato plato) throws IncompleteFormException{
+<span class="nc bnc" id="L50" title="All 4 branches missed.">		if(plato.getNombre().equals(&quot;&quot;) || plato.getDescripcion().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L51" title="All 4 branches missed.">			|| plato.getIdRestaurante().equals(&quot;&quot;) || plato.getPrecio()&lt;=0)</span>
+<span class="nc" id="L52">				throw new IncompleteFormException(&quot;Faltan datos&quot;);</span>
+	
+<span class="nc bnc" id="L54" title="All 2 branches missed.">		if(plato.getId()!=null) {</span>
+<span class="nc" id="L55">			plato.setId(null);</span>
+		}
+<span class="nc" id="L57">		platoRepo.insert(plato);</span>
+<span class="nc" id="L58">	}</span>
+	
+	/**
+	 * Nos devuelve un plato por su id
+	 */
+	public Optional&lt;Plato&gt; findById(String idPlato) {
+<span class="fc" id="L64">		return platoRepo.findById(idPlato);</span>
+	}
+	
+	/**
+	 * Vamos a borrar un plato de la bbdd y de un restaurante mediante
+	 * su id
+	 */
+	public void deleteById(String idPlato) {
+<span class="nc" id="L72">		platoRepo.deleteById(idPlato);	</span>
+<span class="nc" id="L73">	}</span>
+	
+	/**
+	 * Los cambios los cuales se realicen al modificar los datos de un
+	 * determinado plato mediante su id se guardan en la bbdd
+	 */
+	public void update(Plato plato) throws IncompleteFormException {
+<span class="nc bnc" id="L80" title="All 4 branches missed.">		if(plato.getNombre().equals(&quot;&quot;) || plato.getDescripcion().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">				||  plato.getPrecio()&lt;=0)</span>
+<span class="nc" id="L82">			throw new IncompleteFormException(&quot;Introduce todos los datos.&quot;);</span>
+			
+<span class="nc" id="L84">		platoRepo.save(plato);</span>
+<span class="nc" id="L85">	}</span>
+
+	/*Método que consulta el nombre de un plato dado su ID*/
+	public Plato consultarIdPorNombrePlato(String nombre) throws IlegalNumberException {
+		
+<span class="nc" id="L90">		Optional&lt;Plato&gt; plato = platoRepo.findIdBynombre(nombre);</span>
+		
+<span class="nc bnc" id="L92" title="All 2 branches missed.">		if(!plato.isPresent())</span>
+<span class="nc" id="L93">			throw new IlegalNumberException(&quot;El id del plato no coincide con uno existente&quot;);</span>
+		
+<span class="nc" id="L95">		return plato.get();</span>
+		
+	}
+
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegisterService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.service</a> &gt; <span class="el_source">RegisterService.java</span></div><h1>RegisterService.java</h1><pre class="source lang-java linenums">package com.example.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.example.exceptions.ContraseniaIncorrectaException;
+import com.example.exceptions.IlegalNumberException;
+import com.example.exceptions.InvalidEmailException;
+import com.example.exceptions.YaEnUsoException;
+import com.example.model.Rider;
+import com.example.model.Usuario;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
+@Service
+@RequestMapping(&quot;/Registro&quot;)
+/*
+ * 
+ * Esta clase representa el servicio de registro, tanto para riders como usuarios
+ * 
+ * */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L24">public class RegisterService {</span>
+	/*=================================================*/
+	//VARIABLES
+	//riderServ : variable que representa al servicio de riders y que permite su registro
+	@Autowired
+	private RiderService riderServ;
+	//userServ : variable que representa al servicio de usuarios y que permite su registro
+	@Autowired
+	private UsuarioService userServ;
+	/*=======================================================*/
+	//MÉTODOS
+	/*
+	 * Método que llama a la funcionalidad del servicio de riders para registrar uno en la BBDD. 
+	 * Controla excepciones de YaEnUsoException, contraseniaIncorrecta e InvalidEmailException
+	 * 
+	 * */
+	public Rider signUpRider(Rider rider) throws YaEnUsoException, ContraseniaIncorrectaException, InvalidEmailException, IlegalNumberException{		
+<span class="nc" id="L41">		rider.setIntentos(5);</span>
+<span class="nc" id="L42">		return riderServ.saveRider(rider);</span>
+	}
+	/*
+	 * Método que llama a la funcionalidad del servicio de usuarios para registrar uno en la BBDD. 
+	 * Controla excepciones de YaEnUsoException, contraseniaIncorrecta , InvalidEmailException e IlegalNumberException
+	 * 
+	 * */
+	public Usuario signUpUsuario(Usuario user) throws YaEnUsoException, ContraseniaIncorrectaException, IlegalNumberException, InvalidEmailException {
+<span class="nc" id="L50">		user.setIntentos(5);</span>
+<span class="nc" id="L51">		return userServ.saveUseR(user);</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

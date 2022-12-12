@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Usuario.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.model</a> &gt; <span class="el_source">Usuario.java</span></div><h1>Usuario.java</h1><pre class="source lang-java linenums">package com.example.model;
+
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.mongodb.lang.NonNull;
+/*Clase que representa al objeto usuario, y que extiende de la clase Persona*/
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+public class Usuario extends Persona{
+	/*==========================================*/
+	//VARIABLES
+	//direccion : refiere a la dirección donde pide el usuario
+	//Anota NonNull para evitar nulos en la BBDD
+	@NonNull
+	private String direccion;
+	//telefono : refiere a un teléfono válido del usuario
+	@NonNull
+	private String telefono;
+	/*Método constructor de la clase*/	
+	public Usuario(String nif, String nombre, String email, String contrasenia,
+			String contraseniaDoble,int intentos, String direccion, String telefono) {
+<span class="nc" id="L22">		super(nif, nombre, email, contrasenia,contraseniaDoble,intentos);</span>
+<span class="nc" id="L23">		this.direccion = direccion;</span>
+<span class="nc" id="L24">		this.telefono = telefono;</span>
+<span class="nc" id="L25">	}</span>
+
+	public Usuario() {
+<span class="fc" id="L28">		super();</span>
+<span class="fc" id="L29">		this.direccion = &quot;&quot;;</span>
+<span class="fc" id="L30">		this.telefono = &quot;&quot;;</span>
+<span class="fc" id="L31">	}</span>
+
+	/*Métodos Getter y Setter de la clase*/
+	public String getDireccion() {
+<span class="nc" id="L35">		return direccion;</span>
+	}
+
+	public void setDireccion(String direccion) {
+<span class="nc" id="L39">		this.direccion = direccion;</span>
+<span class="nc" id="L40">	}</span>
+
+	public String getTelefono() {
+<span class="nc" id="L43">		return telefono;</span>
+	}
+
+	public void setTelefono(String telefono) {
+<span class="nc" id="L47">		this.telefono = telefono;</span>
+<span class="nc" id="L48">	}</span>
+	/*Método toString de la clase*/
+	@Override
+	public String toString() {
+<span class="nc" id="L52">		return &quot;Usuario [ direccion=&quot; + direccion + &quot;, telefono=&quot; + telefono + &quot;]&quot;;</span>
+	}
+	
+	
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

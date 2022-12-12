@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RiderController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.controller</a> &gt; <span class="el_source">RiderController.java</span></div><h1>RiderController.java</h1><pre class="source lang-java linenums">package com.example.controller;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.example.exceptions.MalEstadoPedidoException;
+import com.example.exceptions.NonAdminValidationException;
+import com.example.model.PedidoComanda;
+import com.example.model.Rider;
+import com.example.service.RiderService;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
+@RestController
+@RequestMapping(&quot;/ticomo&quot;)
+@CrossOrigin(origins = {&quot;https://ticomo01man.web.app&quot;, &quot;http://localhost:4200&quot;})
+/*
+ * Esta clase actúa como un patrón de 
+ * diseño encargado de llamar al servicio de los Rider
+ * para ejecutar sus funcionalidades.
+ * */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L34">public class RiderController {</span>
+	/*=============================================================================================*/
+	//VARIABLES
+	
+	//riderService : Propiedad que solo conoce el controlador del servicio de Riders
+	private static RiderService riderServ;
+	/*=============================================================================================*/
+
+	// MÉTODOS
+	
+	//Inicializar el servicio del rider
+	@Autowired
+	public void setRiderService(RiderService riderService) {
+<span class="fc" id="L47">		RiderController.riderServ = riderService;</span>
+<span class="fc" id="L48">	}</span>
+	
+	/*
+	 * Este método es llamado desde la vista por tipo PostMapping y toma
+	 * como entrada un Rider que se le pasa al servicio para que lo registre y lo guarde.
+	 * Es un método que se llama en caso de que un rider quiera actualizar su información.
+	 * 
+	 * Controla excepciones y retorna un FORBIDDEN en caso de error.
+	 * 
+	 * */
+	@PostMapping(&quot;/riders&quot;)
+	public void saveRider(@RequestBody Rider rider) {
+		try {
+<span class="nc" id="L61">			riderServ.saveRider(rider);</span>
+<span class="nc" id="L62">		}catch(Exception e) {</span>
+<span class="nc" id="L63">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L64">		}</span>
+	
+<span class="nc" id="L66">	}</span>
+	/*Método que retorna una lista como consulta de todos los rider*/
+	@GetMapping(&quot;/consultarRiders/{token}&quot;)
+	public List&lt;Rider&gt; consultarRiders(@PathVariable String token) {
+		
+		try {
+<span class="nc bnc" id="L72" title="All 2 branches missed.">			if(!token.equalsIgnoreCase(&quot;admin&quot;))</span>
+<span class="nc" id="L73">				throw new NonAdminValidationException(&quot;No hay un token de Administrador válido para consultar los riders&quot;);</span>
+				
+<span class="nc" id="L75">			return riderServ.consultarRiders();</span>
+			
+<span class="nc" id="L77">		}catch(Exception e) {</span>
+<span class="nc" id="L78">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+	
+	}
+	
+	/*
+	 * Método para actualizar un rider
+	 * 
+	 * */
+	@PostMapping(&quot;/updateRider&quot;)
+	public void updateRider(@RequestBody Rider rider) {
+		try {
+<span class="nc" id="L90">			riderServ.updateForm(rider);</span>
+<span class="nc" id="L91">		}catch(Exception e) {</span>
+<span class="nc" id="L92">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L93">		}</span>
+<span class="nc" id="L94">	}</span>
+	/*
+	 * Método para borrar un rider
+	 * 
+	 * */
+	@PostMapping(&quot;/deleteRider&quot;)
+	public void deleteRider(@RequestBody String riderNif) {
+		try {
+<span class="nc" id="L102">			riderServ.deleteRiderById(riderNif);</span>
+<span class="nc" id="L103">		}catch(Exception e) {</span>
+<span class="nc" id="L104">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L105">		}</span>
+<span class="nc" id="L106">	}</span>
+	/**
+	 *Método para consultar todos los pedidos existentes 
+	 */
+	@PostMapping(&quot;/consultarPedidos&quot;)
+	public List&lt;PedidoComanda&gt; consultarTodosLosPedidos(){
+		try {
+<span class="fc" id="L113">			return riderServ.consultarPedidos();</span>
+<span class="nc" id="L114">		}catch(Exception e) {</span>
+<span class="nc" id="L115">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+	}
+	/*
+	 * Método para consultar los pedidos únicamente por su estado de preparación (Por si es necesario filtrar)
+	 * */
+	@GetMapping(&quot;/consultarPedidosPorEstado/{estado}&quot;)
+	public List&lt;PedidoComanda&gt; consultarTodosLosPedidosPorEstado(@PathVariable String estado){
+		try {
+<span class="nc" id="L124">			return riderServ.consultarPedidosPorEstado(estado);</span>
+<span class="nc" id="L125">		}catch(Exception e) {</span>
+<span class="nc" id="L126">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+	}
+	/*
+     * Método para cambiar el estado de un pedido al haberlos consultado por estado de pedido
+     * */
+    @PostMapping(&quot;/cambiarEstadoReparto&quot;)
+    public void cambiarEstadoPedido(@RequestBody PedidoComanda pedido) throws MalEstadoPedidoException {
+        
+        try {
+<span class="nc" id="L136">        	riderServ.cambiarEstadoPedido(pedido);</span>
+<span class="nc" id="L137">		}catch(Exception e) {</span>
+<span class="nc" id="L138">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L139">		}</span>
+<span class="nc" id="L140">    }</span>
+    
+    /*Método que llama para consultar los pedidos en reparto del rider*/
+    @GetMapping(&quot;/misPedidosEnReparto/{idRider}&quot;)
+    public List&lt;PedidoComanda&gt; consultarMisPedidosEnReparto(@PathVariable String idRider){
+    	try {
+<span class="nc" id="L146">			return riderServ.consultarMisPedidosEnReparto(idRider);</span>
+<span class="nc" id="L147">		}catch(Exception e) {</span>
+<span class="nc" id="L148">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+    }
+    /*Método que devuelve objeto rider buscando por NIF*/
+    @GetMapping(&quot;/rider/{nif}&quot;)
+    public Optional&lt;Rider&gt; findById(@PathVariable String nif) {
+        try {
+<span class="nc" id="L155">            return riderServ.findById(nif);</span>
+<span class="nc" id="L156">        } catch (Exception e) {</span>
+<span class="nc" id="L157">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+        }
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

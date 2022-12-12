@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdministratorController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.controller</a> &gt; <span class="el_source">AdministratorController.java</span></div><h1>AdministratorController.java</h1><pre class="source lang-java linenums">package com.example.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.example.model.Administrator;
+import com.example.model.PedidoComanda;
+import com.example.model.Usuario;
+import com.example.service.AdminService;
+import com.example.service.UsuarioService;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
+@RestController
+@RequestMapping(&quot;/ticomo&quot;)
+@CrossOrigin(origins = {&quot;https://ticomo01man.web.app&quot;, &quot;http://localhost:4200&quot;})
+
+/* Clase controller del administrador.
+ * Desde esta clase llamamos al servicio de los administradores
+ * para ejecutar sus funcionalidades.
+ **/
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L33">public class AdministratorController {</span>
+	/*============================================== */
+	//VARIABLES
+	
+	//AdminService : Propiedad que solo conoce el controlador del servicio de Administrador
+	//Se instancia sola al arrancar SpringFramework con la anotación Autowired
+	@Autowired
+	private AdminService adminServ;
+	//userServ : los admin pueden acceder al servicio de usuario para hacer consultas
+	@Autowired
+	private UsuarioService userServ;
+	/*============================================== */
+	//MÉTODOS
+
+	/*
+	 * Este método es llamado desde la vista por tipo PostMapping y toma
+	 * como entrada un administrador que se le pasa al servicio para que lo registre y lo guarde.
+	 * 
+	 * Controla excepciones y retorna un BAD_REQUEST en caso de error.
+	 * */
+	@PostMapping(&quot;/administrators&quot;)
+	public void saveAdministrator(@RequestBody Administrator administrator) {	
+		try {
+<span class="nc" id="L56">			adminServ.saveAdmin(administrator);</span>
+<span class="nc" id="L57">		}catch(Exception e) {</span>
+<span class="nc" id="L58">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L59">		}</span>
+<span class="nc" id="L60">	}</span>
+	/*
+	 * Este método es utilizado por administradores para consultar los usuarios que tienen perfil en la aplicación
+	 * Retorna una lista de esos usuarios si y solo si la persona que lo ordena es autorizada haciendo
+	 * uso de un token de administrador.
+	 * 
+	 * Controla excepciones y retorna un FORBIDDEN en caso de error.	  
+	 * */
+	@GetMapping(&quot;/consultarUsers/{tokenAdmin}&quot;)
+	public List&lt;Usuario&gt; consultarUsers(@PathVariable String tokenAdmin){
+		try {
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			if(!tokenAdmin.contains(&quot;Admin&quot;)) {</span>
+<span class="nc" id="L72">				throw new ResponseStatusException(HttpStatus.FORBIDDEN , &quot;Usted no tiene autorización para realizar esta acción&quot;);</span>
+			}
+<span class="nc" id="L74">			return userServ.consultarUsuarios();</span>
+<span class="nc" id="L75">		}catch(Exception e) {</span>
+<span class="nc" id="L76">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+		}
+	}
+	
+	/*
+	 * Método para actualizar un administrador si previamente ha verificado su token en Frontend
+	 * */
+	@PostMapping(&quot;/updateAdmin&quot;)
+	public void updateAdmn(@RequestBody Administrator admn) {
+		try {
+<span class="nc" id="L86">			adminServ.updateAdmnForm(admn);</span>
+<span class="nc" id="L87">		}catch(Exception e) {</span>
+<span class="nc" id="L88">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="nc" id="L89">		}</span>
+<span class="nc" id="L90">	}</span>
+	
+	/*
+	 * Método que consulta los pedidos para el administrador, según el restaurante que le pase
+	 * */
+	@PostMapping(&quot;/consultarPedidosPorRestaurante&quot;)
+	public List&lt;PedidoComanda&gt; consultarPedidosAdmin(@RequestBody String idRestaurante){
+		try {
+<span class="nc" id="L98">			return adminServ.findByidRestaurante(idRestaurante);</span>
+<span class="nc" id="L99">		}catch(Exception e) {</span>
+<span class="nc" id="L100">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+		}
+	}
+	/*Método para actualizar los intentos del Admin. Se puede llamar a mano también para actualizarlo aunque es común su uso desde el login*/
+	@PostMapping(&quot;/updateAdminIntentos&quot;)
+	public void updateAdminIntentos(String email, int intentos) {
+		try {
+<span class="nc" id="L107">			adminServ.updateAdmnIntentos(email,intentos);</span>
+<span class="nc" id="L108">		}catch(Exception e) {</span>
+<span class="nc" id="L109">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="nc" id="L110">		}</span>
+<span class="nc" id="L111">	}</span>
+	
+	@GetMapping(&quot;/consultarPedidosAdmin/{estado}&quot;)
+    public List&lt;PedidoComanda&gt; consultarTodosLosPedidosPorEstado(@PathVariable String estado){
+        try {
+<span class="nc" id="L116">            return adminServ.consultarPedidosPorEstado(estado);</span>
+<span class="nc" id="L117">        }catch(Exception e) {</span>
+<span class="nc" id="L118">            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+        }
+    }
+	
+	
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

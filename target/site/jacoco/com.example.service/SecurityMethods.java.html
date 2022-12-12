@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityMethods.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.service</a> &gt; <span class="el_source">SecurityMethods.java</span></div><h1>SecurityMethods.java</h1><pre class="source lang-java linenums">package com.example.service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import com.example.exceptions.ContraseniaIncorrectaException;
+import com.example.exceptions.IlegalNumberException;
+import com.example.model.Administrator;
+import com.example.model.Persona;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+/*Clase abstracta que sirve para alojar métodos referentes a la seguridad del sistema*/
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L13">public class SecurityMethods {</span>
+	
+	/*====================================================*/
+	//MÉTODOS
+	/*
+	 * 
+	 * Este método permite comprobar si la contraseña de un 
+	 * determinado usuario incumple las condiciones de seguridad establecidas
+	 * 
+	 * */
+	public void restriccionesContrasenia(Persona usuario) throws ContraseniaIncorrectaException {
+		
+		/*restricciones de seguridad de contraseña*/
+		
+<span class="nc bnc" id="L27" title="All 2 branches missed.">		if(usuario.getContrasenia().length() &lt; 8)</span>
+<span class="nc" id="L28">			throw new ContraseniaIncorrectaException(&quot;Error. La contraseña tiene que tener un mínimo de 8 caracteres&quot;);</span>
+		
+<span class="nc" id="L30">		boolean contieneMayus = false;</span>
+<span class="nc" id="L31">		boolean contieneNumero = false;</span>
+<span class="nc bnc" id="L32" title="All 6 branches missed.">		for(int i = 0; i &lt; usuario.getContrasenia().length() || (!contieneMayus &amp;&amp; !contieneNumero); i++)</span>
+		{
+<span class="nc bnc" id="L34" title="All 2 branches missed.">			if(Character.isUpperCase(usuario.getContrasenia().charAt(i)))</span>
+<span class="nc" id="L35">				contieneMayus = true;</span>
+			
+<span class="nc bnc" id="L37" title="All 2 branches missed.">			if(Character.isDigit(usuario.getContrasenia().charAt(i)))</span>
+<span class="nc" id="L38">				contieneNumero = true;	</span>
+		}
+		
+<span class="nc bnc" id="L41" title="All 2 branches missed.">		if(!contieneMayus)</span>
+<span class="nc" id="L42">			throw new ContraseniaIncorrectaException(&quot;Error. La contraseña tiene que tener mínimo una mayúscula&quot;);</span>
+		
+<span class="nc bnc" id="L44" title="All 2 branches missed.">		if(!contieneNumero)</span>
+<span class="nc" id="L45">			throw new ContraseniaIncorrectaException(&quot;Error. La contraseña tiene que tener mínimo un número&quot;);</span>
+<span class="nc" id="L46">	}</span>
+	
+	/*
+	 * Comprobamos que la contraseña del administrador sea valida.
+	 */
+	
+	public void restriccionesContraseniaAdmin(Administrator admin) throws ContraseniaIncorrectaException {
+		
+		/*restricciones de seguridad de contraseña*/
+		
+<span class="nc bnc" id="L56" title="All 2 branches missed.">		if(admin.getContrasenia().length() &lt; 8)</span>
+<span class="nc" id="L57">			throw new ContraseniaIncorrectaException(&quot;Error. La contraseña tiene que tener un mínimo de 8 caracteres&quot;);</span>
+		
+<span class="nc" id="L59">		boolean contieneMayus = false;</span>
+<span class="nc" id="L60">		boolean contieneNumero = false;</span>
+<span class="nc bnc" id="L61" title="All 6 branches missed.">		for(int i = 0; i &lt; admin.getContrasenia().length() || (!contieneMayus &amp;&amp; !contieneNumero); i++)</span>
+		{
+<span class="nc bnc" id="L63" title="All 2 branches missed.">			if(Character.isUpperCase(admin.getContrasenia().charAt(i)))</span>
+<span class="nc" id="L64">				contieneMayus = true;</span>
+			
+<span class="nc bnc" id="L66" title="All 2 branches missed.">			if(Character.isDigit(admin.getContrasenia().charAt(i)))</span>
+<span class="nc" id="L67">				contieneNumero = true;	</span>
+		}
+		
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if(!contieneMayus)</span>
+<span class="nc" id="L71">			throw new ContraseniaIncorrectaException(&quot;Error. La contraseña tiene que tener mínimo una mayúscula&quot;);</span>
+		
+<span class="nc bnc" id="L73" title="All 2 branches missed.">		if(!contieneNumero)</span>
+<span class="nc" id="L74">			throw new ContraseniaIncorrectaException(&quot;Error. La contraseña tiene que tener mínimo un número&quot;);</span>
+<span class="nc" id="L75">	}</span>
+	
+	/*
+	 * Método para cifrar contraseñas
+	 * 
+	 * */
+	public String cifradoContrasenia(String pwd){
+<span class="nc" id="L82">		PasswordEncoder ncoder = codificador();</span>
+<span class="nc" id="L83">		return ncoder.encode(pwd);</span>
+		
+	}
+	
+	/*Método para &quot;decodificar&quot; la contraseña*/
+	public boolean decoder(String pass, String passMongo) {
+<span class="fc" id="L89">		PasswordEncoder ncoder = codificador();</span>
+<span class="fc" id="L90">		return ncoder.matches(pass, passMongo);</span>
+	}
+	
+	
+	/*Método que retorna el codificador y que permite
+	 *  hacer .encode() para codificar o .matches() 
+	 *  para saber si una contraseña coincide con otra ya codificada*/
+	
+	public PasswordEncoder codificador() {
+<span class="fc" id="L99">		return new BCryptPasswordEncoder();</span>
+	}
+
+	
+	/*
+	 * Método que verifica si un número de teléfono es válido
+	 * 
+	 * */
+	public Boolean verificarNumero(String numero) throws IlegalNumberException {
+		
+<span class="nc bnc" id="L109" title="All 2 branches missed.">		if(numero.length() &lt; 9)</span>
+<span class="nc" id="L110">			throw new IlegalNumberException(&quot;El número de teléfono introducido no es válido. Introduzca nueve dígitos&quot;);</span>
+		
+<span class="nc bnc" id="L112" title="All 8 branches missed.">		if(numero.charAt(0) != '6' &amp;&amp; numero.charAt(0) != '7' &amp;&amp; numero.charAt(0)!= '8' &amp;&amp; numero.charAt(0) != '9')</span>
+<span class="nc" id="L113">			throw new IlegalNumberException(&quot;El número de teléfono introducido no es válido. Debe estar en el rango 6-9 de los números de teléfono&quot;);</span>
+		
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		for(int i = 0; i &lt; numero.length(); i++) </span>
+		{
+<span class="nc bnc" id="L117" title="All 2 branches missed.">			if(!Character.isDigit(numero.charAt(i)))</span>
+<span class="nc" id="L118">				throw new IlegalNumberException(&quot;El número de teléfono introducido no es válido.&quot;);</span>
+			
+		}	
+<span class="nc" id="L121">		return true;</span>
+	}
+	/*
+	 * 
+	 * *Método que verifica si un email es válido
+	 * 
+	 * */
+	public Boolean validEmail(String email) {
+<span class="fc" id="L129">		String regex = &quot;^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$&quot;;</span>
+<span class="fc" id="L130">		return email.toLowerCase().matches(regex.toLowerCase());</span>
+	}
+	
+	/*Método para validar que dos contraseñas son iguales*/
+	public Boolean equalPass(String pass1, String pass2) throws ContraseniaIncorrectaException {
+		
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if(!pass1.equals(pass2))</span>
+<span class="nc" id="L137">			throw new ContraseniaIncorrectaException(&quot;Las contraseñas no coinciden&quot;);</span>
+		
+<span class="nc" id="L139">		return true;</span>
+		
+	}
+	
+	/*Método para validar un NIF*/
+	public Boolean validNif(String nif) throws IlegalNumberException {
+		
+<span class="nc" id="L146">		String err = &quot;Invalid NIF. No son 8 letras y un caracter&quot;;</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">		if(nif.length() != 9) {</span>
+<span class="nc" id="L148">			throw new IlegalNumberException(err);</span>
+		}
+<span class="nc bnc" id="L150" title="All 2 branches missed.">		for(int i = 0; i &lt; nif.length()-1; i++) {</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">			if(!Character.isDigit(nif.charAt(i)))</span>
+<span class="nc" id="L152">				throw new IlegalNumberException(err);</span>
+		}
+		
+<span class="nc bnc" id="L155" title="All 2 branches missed.">		if(!Character.isAlphabetic(nif.charAt(nif.length()-1)))</span>
+<span class="nc" id="L156">			throw new IlegalNumberException(err);</span>
+		
+<span class="nc" id="L158">		return true;</span>
+	}
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

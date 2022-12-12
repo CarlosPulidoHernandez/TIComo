@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ServiceController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.controller</a> &gt; <span class="el_source">ServiceController.java</span></div><h1>ServiceController.java</h1><pre class="source lang-java linenums">package com.example.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import com.example.model.Rider;
+import com.example.model.TokenSession;
+import com.example.model.Usuario;
+import com.example.service.LoginService;
+import com.example.service.RegisterService;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
+@RestController
+@RequestMapping(&quot;/ticomo&quot;)
+@CrossOrigin(origins = {&quot;https://ticomo01man.web.app&quot;, &quot;http://localhost:4200&quot;})
+/*
+ * Esta clase actúa como un patrón de
+ * diseño encargado de llamar al servicio para que registre tanto usuarios como riders y para loggear
+ * gente a la aplicación.
+ * */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L28">public class ServiceController {</span>
+	
+	/*=============================================================================================*/
+	//VARIABLES
+	
+	//registerService : Propiedad que solo conoce el controlador del servicio. Llama al servicio de registro
+	//Se instancia sola al arrancar SpringFramework con la anotación Autowired
+	@Autowired
+	private RegisterService regService;
+	//logService : Propiedad que solo conoce el controlador del servicio. Llama al servicio de Loggeo.
+	private static LoginService logService;
+	/*=============================================================================================*/
+	//MÉTODOS
+	
+	//Inicializar el servicio del login
+	@Autowired
+	public void setLoginService(LoginService loginServ) {
+<span class="fc" id="L45">		ServiceController.logService = loginServ;</span>
+<span class="fc" id="L46">	}</span>
+    
+	
+	/*
+	 * Este método es llamado desde la vista por tipo PostMapping , se accede vía
+	 * &quot;/Registro/newUsuario&quot; para diferenciar que tiene que registrar un usuario
+	 * y toma como entrada un usuario que se le pasa al servicio para que lo registre.
+	 *
+	 * Controla excepciones y retorna un FORBIDDEN en caso de error.	 
+	 * */
+	@PostMapping(&quot;/Registro/newUsuario&quot;)
+	public void signUpUsuario(@RequestBody Usuario user){
+		try {
+<span class="nc" id="L59">			regService.signUpUsuario(user);</span>
+<span class="nc" id="L60">		}catch(Exception e) {</span>
+<span class="nc" id="L61">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L62">		}</span>
+<span class="nc" id="L63">	}</span>
+	/*
+	 * Este método es llamado desde la vista por tipo PostMapping , se accede vía
+	 * &quot;/Registro/newRider&quot; para diferenciar que tiene que registrar un rider
+	 * y toma como entrada un rider que se le pasa al servicio para que lo registre.
+	 *
+	 * Controla excepciones y retorna un FORBIDDEN en caso de error.
+	 * */
+	@PostMapping(&quot;/Registro/newRider&quot;)
+	public void signUpRider(@RequestBody Rider rider){
+		try {
+<span class="nc" id="L74">			regService.signUpRider(rider);</span>
+<span class="nc" id="L75">		}catch(Exception e) {</span>
+<span class="nc" id="L76">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L77">		}</span>
+<span class="nc" id="L78">	}</span>
+	
+	/* Este método es llamado desde la vista por tipo PostMapping , se accede vía &quot;/Login&quot; para Loggear todo tipo de usuarios de la aplicación
+	 * Toma como entrada la información de loggeo : Email y Contraseña
+	 * Controla excepciones y retorna un FORBIDDEN en caso de error.
+	 */
+	
+	@PostMapping(&quot;/Login&quot;)
+	public TokenSession signIn(@RequestBody Usuario info) {
+		try {
+			TokenSession loginInfo;
+<span class="fc" id="L89">			loginInfo = logService.signIn(info);</span>
+<span class="fc" id="L90">			return loginInfo;</span>
+<span class="fc" id="L91">		}catch(Exception e) {</span>
+<span class="fc" id="L92">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+		
+	}
+	
+	@PostMapping(&quot;/buscarUsuarioComoTelefonista&quot;)
+	public Usuario buscarUsuarioComoTelefonista(@RequestBody Usuario info) {
+		try {
+			Usuario usuario;
+<span class="nc" id="L101">			usuario = logService.buscarUsuarioComoTelefonista(info);</span>
+<span class="nc" id="L102">			return usuario;</span>
+<span class="nc" id="L103">		}catch(Exception e) {</span>
+<span class="nc" id="L104">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+		
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

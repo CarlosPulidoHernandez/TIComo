@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.service</a> &gt; <span class="el_source">UsuarioService.java</span></div><h1>UsuarioService.java</h1><pre class="source lang-java linenums">package com.example.service;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.example.model.Facturas;
+import com.example.model.PedidoComanda;
+import com.example.exceptions.ContraseniaIncorrectaException;
+import com.example.exceptions.IlegalNumberException;
+import com.example.exceptions.IncompleteFormException;
+import com.example.exceptions.InvalidEmailException;
+import com.example.exceptions.InvoiceGenException;
+import com.example.exceptions.MalEstadoPedidoException;
+import com.example.exceptions.PerfilBloqueadoException;
+import com.example.exceptions.UnexistentOrderException;
+import com.example.exceptions.UnexistentUser;
+import com.example.exceptions.YaEnUsoException;
+import com.example.model.Persona;
+import com.example.model.Plato;
+import com.example.model.Restaurante;
+import com.example.model.Rider;
+import com.example.model.Usuario;
+import com.example.model.Valoracion;
+import com.example.repository.FacturasRepository;
+import com.example.repository.PedidosRepository;
+import com.example.repository.RestauranteRepository;
+import com.example.repository.RiderRepository;
+import com.example.repository.UsuarioRepository;
+import com.example.repository.ValoracionesRepository;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.itextpdf.layout.Document;
+
+@Service
+@RequestMapping(&quot;/Usuarios&quot;)
+/*
+ * Clase representativa del servicio que aloja funcionalidades para los usuarios
+ */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L47">public class UsuarioService {</span>
+		/* ========================================================== */
+	// VARIABLES
+	// usuarioRepo: variable solo conocida por esta clase que accede al repositorio
+	// para hacer consultas en la BBDD
+	// Anota Autowired para instanciarse automáticamente al iniciar Spring
+	@Autowired
+	private UsuarioRepository usuarioRepo;
+	//restauranteRepo : repositorio para hacer consultas de los pedidos de los restaurantes
+	@Autowired
+	private RestauranteRepository restauranteRepo;
+	//pedidosRepo : repositorio para hacer consultas de los pedidos del usuario
+	@Autowired
+	private PedidosRepository pedidosRepo;
+	//valRepo : repositorio para hacer consultas de las valoraciones de los pedidos
+	@Autowired
+	private ValoracionesRepository valRepo;
+	// checkSecurity : variable que accede a métodos que comprueban la seguridad del
+	// sistema
+<span class="fc" id="L66">	private SecurityMethods checkSecurity = new SecurityMethods();</span>
+	// restauranteService : variable que permite a un usuario acceder al servicio de restaurantes para realizar un pedido
+	@Autowired
+	private RestauranteService restaurantServ;
+	// facturasRepo : repositorio de facturas para manejar la BBDD
+	@Autowired
+	private FacturasRepository facturasRepo;
+	// riderService : variable que la vamos a usar al valorar riders
+    @Autowired
+    private RiderService riderServ;
+    // valoracionService : variable que la vamos a usar para guardar las
+    // valoraciones en la BBDD
+    @Autowired
+    private ValoracionService valService;
+    //riderRepo : repositorio para pedir a los rider
+    @Autowired
+    private RiderRepository riderRepo;
+    
+    static final String UNUS = &quot;No existe para valorar&quot;;
+
+	/* ========================================================================== */
+	// MÉTODOS
+	/*
+	 * 
+	 * Este método sirve para registrar usuarios o actualizar su información.
+	 * Controla excepciones de
+	 * YaEnUsoException,contraseniaIncorrecta,IlegalNumberException e
+	 * InvalidEmailException.
+	 * 
+	 * 
+	 */
+	public Usuario saveUseR(Usuario usuario)
+			throws YaEnUsoException, ContraseniaIncorrectaException,
+			IlegalNumberException, InvalidEmailException {
+
+<span class="nc" id="L101">		Optional&lt;Usuario&gt; possibleUsuario = usuarioRepo.findByEmail(usuario.getEmail());</span>
+
+<span class="nc bnc" id="L103" title="All 2 branches missed.">		if (possibleUsuario.isPresent())</span>
+<span class="nc" id="L104">			throw new YaEnUsoException(&quot;Error.Ya existe un usuario que utiliza este correo. Utilize otro&quot;);</span>
+
+<span class="nc" id="L106">		possibleUsuario = usuarioRepo.findById(usuario.getNif());</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if (possibleUsuario.isPresent())</span>
+<span class="nc" id="L109">			throw new YaEnUsoException(&quot;Error.Ya existe un usuario que utiliza este NIF. Intente otro&quot;);</span>
+
+<span class="nc" id="L111">		Persona aux = usuario;</span>
+<span class="nc" id="L112">		checkSecurity.restriccionesContrasenia(aux);</span>
+<span class="nc" id="L113">		checkSecurity.verificarNumero(usuario.getTelefono());</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">		if(Boolean.FALSE.equals(checkSecurity.validEmail(usuario.getEmail())))</span>
+<span class="nc" id="L115">			throw new InvalidEmailException(&quot;El email no corresponde con uno válido&quot;);</span>
+		
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if(Boolean.FALSE.equals(checkSecurity.validNif(usuario.getNif())))</span>
+<span class="nc" id="L118">			throw new IlegalNumberException(&quot;El NIF introducido no es un NIF válido. Tiene que contener 8 números y un caracter&quot;);</span>
+
+<span class="nc" id="L120">		checkSecurity.equalPass(usuario.getContrasenia(), usuario.getContraseniaDoble());</span>
+<span class="nc" id="L121">		usuario.setContrasenia(checkSecurity.cifradoContrasenia(aux.getContrasenia()));</span>
+<span class="nc" id="L122">		usuario.setContraseniaDoble(checkSecurity.cifradoContrasenia(usuario.getContraseniaDoble()));	</span>
+		
+<span class="nc" id="L124">		return usuarioRepo.insert(usuario);</span>
+
+	}
+
+	/*
+	 * Retorna una consulta de todos los usuarios de la BBDD
+	 */
+	public List&lt;Usuario&gt; consultarUsuarios() {
+<span class="nc" id="L132">		return usuarioRepo.findAll();</span>
+	}
+
+	/*
+	 * 
+	 * Retorna un opcional que pueda contener un usuario buscado por su ID
+	 */
+	public Optional&lt;Usuario&gt; findById(String nif) {
+<span class="nc" id="L140">		return usuarioRepo.findById(nif);</span>
+	}
+	
+	/*Método para guardar una factura si lo desea*/
+	public void guardarFactura(Facturas factura) {
+<span class="nc" id="L145">		facturasRepo.insert(factura);</span>
+<span class="nc" id="L146">	}</span>
+
+	/*
+	 * Retorna una consulta de todas las facturas con ese idPedido de la BBDD
+	 */
+	public void consultarFacturasPorIdPedido(String idPedido) throws InvoiceGenException, IncompleteFormException, IOException {
+		
+<span class="nc" id="L153">		Optional&lt;Facturas&gt; facts= facturasRepo.findByidPedido(idPedido);</span>
+<span class="nc" id="L154">		Optional&lt;PedidoComanda&gt; pedido = pedidosRepo.findById(idPedido);</span>
+		
+<span class="nc bnc" id="L156" title="All 4 branches missed.">		if(!pedido.isPresent() || !facts.isPresent()) {</span>
+<span class="nc" id="L157">			throw new InvoiceGenException(&quot;Hubo un problema con la factura del pedido&quot;);</span>
+		}
+		
+<span class="nc bnc" id="L160" title="All 2 branches missed.">		if(!pedido.get().getId().equals(facts.get().getId())) {</span>
+<span class="nc" id="L161">			throw new InvoiceGenException(&quot;Hubo un problema con la factura del pedido&quot;);</span>
+		}
+		
+<span class="nc" id="L164">		restaurantServ.restauranteGeneraFactura(pedido.get(),facts.get());</span>
+
+		
+<span class="nc" id="L167">	}</span>
+	
+
+	/*
+	 * 
+	 * Retorna un opcional que puede contener un usuario buscado por su email
+	 * 
+	 */
+	public Optional&lt;Usuario&gt; findByEmail(String email) {
+<span class="fc" id="L176">		return usuarioRepo.findByEmail(email);</span>
+	}
+	
+
+	/*
+	 * 
+	 * Retorna un opcional que puede contener un usuario buscado por su email
+	 * 
+	 */
+	public Optional&lt;Valoracion&gt; consultarValoracion(String id) {
+<span class="nc" id="L186">		return valRepo.findById(id);</span>
+	}
+	
+	/*
+	 * 
+	 * Los cambios los cuales hagamos cuando modifiquemos los datos
+	 * del usuario se guardarán en la base de datos
+	 * 
+	 */
+	public void updateForm(Usuario usuario) throws IncompleteFormException, IlegalNumberException,
+	ContraseniaIncorrectaException {
+		
+<span class="nc bnc" id="L198" title="All 4 branches missed.">		if (usuario.getNif().equals(&quot;&quot;) || usuario.getNombre().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L199" title="All 4 branches missed.">				|| usuario.getDireccion().equals(&quot;&quot;) || usuario.getTelefono().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L200" title="All 4 branches missed.">				|| usuario.getEmail().equals(&quot;&quot;) || usuario.getContraseniaDoble().equals(&quot;&quot;)) </span>
+<span class="nc" id="L201">			throw new IncompleteFormException(&quot;Introduzca todos los datos&quot;);</span>
+		
+<span class="nc" id="L203">		Persona aux = usuario;</span>
+<span class="nc" id="L204">		checkSecurity.restriccionesContrasenia(aux);</span>
+<span class="nc" id="L205">		checkSecurity.validEmail(usuario.getEmail());</span>
+<span class="nc" id="L206">		checkSecurity.verificarNumero(usuario.getTelefono());</span>
+		
+<span class="nc bnc" id="L208" title="All 2 branches missed.">		if(Boolean.FALSE.equals(checkSecurity.verificarNumero(usuario.getTelefono())))</span>
+<span class="nc" id="L209">			throw new IlegalNumberException(&quot;El teléfono introducido no es un teléfono válido. Tiene que contener 9 números&quot;);</span>
+		
+		
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if(Boolean.FALSE.equals(checkSecurity.validNif(usuario.getNif())))</span>
+<span class="nc" id="L213">			throw new IlegalNumberException(&quot;El NIF introducido no es un NIF válido. Tiene que contener 8 números y un caracter&quot;);</span>
+		
+<span class="nc bnc" id="L215" title="All 4 branches missed.">		if(usuario.getContrasenia().length() != 60 &amp;&amp; !usuario.getContraseniaDoble().isEmpty()) {</span>
+<span class="nc" id="L216">			checkSecurity.equalPass(usuario.getContrasenia(), usuario.getContraseniaDoble());</span>
+<span class="nc" id="L217">			usuario.setContrasenia(checkSecurity.cifradoContrasenia(usuario.getContrasenia()));</span>
+<span class="nc" id="L218">			usuario.setContraseniaDoble(checkSecurity.cifradoContrasenia(usuario.getContrasenia()));</span>
+		}
+		
+		
+		
+<span class="nc" id="L223">		usuarioRepo.save(usuario);</span>
+			
+<span class="nc" id="L225">	}</span>
+	/*Método que borra un usuario por ID*/
+	public void deleteById(String nif) {
+<span class="nc" id="L228">		usuarioRepo.deleteById(nif);	</span>
+<span class="nc" id="L229">	}</span>
+	
+	/*Este método es utilizado por los administradores para bloquear usuarios y riders*/
+	public void lockPerson(Persona usuario) throws PerfilBloqueadoException 
+	{
+<span class="nc bnc" id="L234" title="All 2 branches missed.">		if(usuario.getIntentos()==0) {</span>
+<span class="nc" id="L235">			throw new PerfilBloqueadoException(&quot;Usuario ya deshabilitado&quot;);</span>
+		}
+<span class="nc" id="L237">		usuario.setIntentos(0);</span>
+		
+<span class="nc" id="L239">		Usuario aux = (Usuario) usuario;</span>
+		
+<span class="nc" id="L241">		usuarioRepo.save(aux);</span>
+<span class="nc" id="L242">	}</span>
+	
+	/*Este método es utilizado por los administradores para desbloquear usuarios y riders*/
+	public void unlockPerson(Persona usuario) throws PerfilBloqueadoException 
+	{
+<span class="nc bnc" id="L247" title="All 2 branches missed.">		if(usuario.getIntentos()==5) {</span>
+<span class="nc" id="L248">			throw new PerfilBloqueadoException(&quot;Usuario ya habilitado&quot;);</span>
+		}
+<span class="nc" id="L250">		usuario.setIntentos(5);</span>
+		
+<span class="nc" id="L252">		Usuario aux = (Usuario) usuario;</span>
+		
+<span class="nc" id="L254">		usuarioRepo.save(aux);</span>
+<span class="nc" id="L255">	}</span>
+
+	/*Método que actua de llamada a la preparación de un pedido del usuario*/
+	public PedidoComanda realizarPedido(Map&lt;String,String&gt; comanda) throws IlegalNumberException {
+		
+<span class="fc" id="L260">		return restaurantServ.prepararPedido(comanda);</span>
+		
+	}
+
+	/*Método que llama al restaurante para que le genere la factura*/
+	
+	public Map&lt;String, Document&gt; pedirFactura(PedidoComanda comanda) throws IncompleteFormException, IOException {
+<span class="fc" id="L267">		return restaurantServ.pedirFactura(comanda);</span>
+	}
+	/*Método que consulta un pedido por id proporcionado por un usuario*/
+	public Optional&lt;PedidoComanda&gt; consultarPedidoPorId(String idPedido) {
+<span class="nc" id="L271">		return restaurantServ.consultarPedidoPorId(idPedido);</span>
+	}
+	/* Método en el que el usuario cambia el estado de un pedido */
+    public void cambiarEstadoPedido(PedidoComanda comanda) throws UnexistentUser, MalEstadoPedidoException {
+<span class="nc" id="L275">    	Optional&lt;PedidoComanda&gt; pedido = pedidosRepo.findById(comanda.getId());</span>
+<span class="nc" id="L276">        Optional&lt;Rider&gt; r= riderServ.findById(comanda.getIdRider());</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        if(!pedido.isPresent())</span>
+<span class="nc" id="L278">            throw new UnexistentUser(&quot;No existe el pedido&quot;);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        if(!r.isPresent())</span>
+<span class="nc" id="L280">            throw new MalEstadoPedidoException(&quot;No existe el rider para consultar ese pedido.&quot;);</span>
+
+<span class="nc" id="L282">        r.get().setNumeroPedidos(r.get().getNumeroPedidos()+1);</span>
+<span class="nc" id="L283">        riderRepo.save(r.get());</span>
+<span class="nc" id="L284">        pedido.get().setEstadoPedido(&quot;Entregado&quot;);</span>
+<span class="nc" id="L285">        pedidosRepo.save(pedido.get());</span>
+<span class="nc" id="L286">        }</span>
+
+	public void modificarPedido(PedidoComanda pedido) throws UnexistentUser {
+<span class="fc" id="L289">		Optional&lt;PedidoComanda&gt; optPedido = pedidosRepo.findById(pedido.getId());	</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">		if(!optPedido.isPresent()) {</span>
+<span class="fc" id="L291">			throw new UnexistentUser(&quot;No existe el pedido&quot;);</span>
+		}
+<span class="fc" id="L293">		pedidosRepo.save(pedido);</span>
+<span class="fc" id="L294">	}</span>
+
+	/*
+     * Método que llama al repositorio de pedidos para encontrar los pedidos pendientes de un cliente
+     * */
+    public List&lt;PedidoComanda&gt; consultarMisPedidosEnReparto(String cliente){
+<span class="nc" id="L300">        List&lt;PedidoComanda&gt; pedidosPendientes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L301">        List&lt;PedidoComanda&gt; total=  pedidosRepo.findBynifCliente(cliente);</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">        for(int i = 0; i&lt; total.size();i++) {</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">            if(total.get(i).getEstadoPedido().equalsIgnoreCase(&quot;en reparto&quot;)) {</span>
+<span class="nc" id="L304">                pedidosPendientes.add(total.get(i));</span>
+            }
+        }
+<span class="nc" id="L307">        return pedidosPendientes;</span>
+    }
+    /*
+     * Método que llama al repositorio de pedidos para encontrar los pedidos de un cliente
+     * */
+    public List&lt;PedidoComanda&gt; consultarMisPedidos(String cliente){
+<span class="nc" id="L313">        return pedidosRepo.findBynifCliente(cliente);</span>
+
+    }
+    /*Método que actualiza los intentos de un usuario. Se puede usar a mano*/
+	public void updateUserIntentos(String email, int intentos) throws UnexistentUser {
+		
+<span class="nc" id="L319">		Optional&lt;Usuario&gt; user = usuarioRepo.findByEmail(email);</span>
+		
+<span class="nc bnc" id="L321" title="All 2 branches missed.">		if(!user.isPresent())</span>
+<span class="nc" id="L322">			throw new UnexistentUser(&quot;Imposible encontrar al usuario&quot;);</span>
+		
+<span class="nc" id="L324">		user.get().setIntentos(intentos);</span>
+		
+<span class="nc" id="L326">		usuarioRepo.save(user.get());</span>
+		
+		
+<span class="nc" id="L329">	}</span>
+	/*Método que consulta el nombre de un plato*/
+	public Plato consultarIdPorNombrePlato(String nombre) throws IlegalNumberException {
+		
+<span class="nc" id="L333">		return restaurantServ.consultarIdPorNombrePlato(nombre);</span>
+	}
+	
+	/*
+	 * Método que guarda la valoracion del restaurante comprobando si es su primera
+	 */
+	public Valoracion valorarPedido(Valoracion valoracion) throws UnexistentUser {
+<span class="nc" id="L340">		Optional&lt;Restaurante&gt; optRestaurante = restaurantServ.findByIdRestaurante(valoracion.getIdValoradoRestaurante());</span>
+<span class="nc" id="L341">		Optional&lt;Rider&gt; optRider = riderServ.findById(valoracion.getIdValoradoRider());</span>
+		
+<span class="nc bnc" id="L343" title="All 4 branches missed.">		if(!optRestaurante.isPresent() || !optRider.isPresent())</span>
+<span class="nc" id="L344">			throw new UnexistentUser(UNUS);</span>
+		
+<span class="nc" id="L346">		List&lt;Valoracion&gt; valoraciones = valRepo.findAll();</span>
+<span class="nc" id="L347">		List&lt;Integer&gt; notasRestaurante = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L348">		notasRestaurante.add(valoracion.getNotaRestaurante());</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">		for (Valoracion valoracionRepo : valoraciones) {</span>
+<span class="nc" id="L350">			notasRestaurante.add(valoracionRepo.getNotaRestaurante());</span>
+<span class="nc" id="L351">		}</span>
+<span class="nc" id="L352">		optRestaurante.get().setValoracionMedia(valoracion.calcularMedia(notasRestaurante));</span>
+<span class="nc" id="L353">		restauranteRepo.save(optRestaurante.get());</span>
+		
+<span class="nc" id="L355">		List&lt;Integer&gt; notasRider = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L356">		notasRider.add(valoracion.getNotaRider());</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		for (Valoracion valoracionRepo : valoraciones) {</span>
+<span class="nc" id="L358">			notasRider.add(valoracionRepo.getNotaRider());</span>
+<span class="nc" id="L359">		}</span>
+<span class="nc" id="L360">		optRider.get().setValoracionMedia(valoracion.calcularMedia(notasRider));</span>
+<span class="nc" id="L361">		riderRepo.save(optRider.get());</span>
+		
+<span class="nc" id="L363">		return valService.saveValoracionPedido(valoracion);</span>
+	}
+	
+	/*Consulta una factura por id*/
+	public Optional&lt;Facturas&gt; findByidPedido(String idPedido) throws UnexistentUser {
+		
+<span class="nc" id="L369">		Optional&lt;Facturas&gt; factura = facturasRepo.findById(idPedido);</span>
+		
+<span class="nc bnc" id="L371" title="All 2 branches missed.">		if(!factura.isPresent())</span>
+<span class="nc" id="L372">			throw new UnexistentUser(&quot;Imposible cargar la factura&quot;);</span>
+
+<span class="nc" id="L374">		return factura;</span>
+	}
+
+	public void deleteOrder(String id) throws MalEstadoPedidoException, UnexistentOrderException {
+<span class="fc" id="L378">		Optional&lt;PedidoComanda&gt; optPedidoComanda = pedidosRepo.findById(id);		</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">		if(optPedidoComanda.isPresent()) {</span>
+<span class="fc" id="L380">			PedidoComanda pedido = optPedidoComanda.get();</span>
+<span class="pc bpc" id="L381" title="2 of 4 branches missed.">			if(pedido.getEstadoPedido().equals(&quot;Entregado&quot;) || pedido.getEstadoPedido().equals(&quot;EnReparto&quot;)){</span>
+<span class="nc" id="L382">				throw new MalEstadoPedidoException(&quot;No se puede cancelar un pedido en el estado &quot; + pedido.getEstadoPedido().toUpperCase());</span>
+			}
+<span class="fc" id="L384">			pedidosRepo.deleteById(id);</span>
+<span class="fc" id="L385">		} else {</span>
+<span class="fc" id="L386">			throw new UnexistentOrderException(&quot;No se encuentra el pedido con id &quot; + id);</span>
+		}
+<span class="fc" id="L388">	}</span>
+	
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

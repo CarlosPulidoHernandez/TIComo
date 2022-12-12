@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.controller</a> &gt; <span class="el_source">UsuarioController.java</span></div><h1>UsuarioController.java</h1><pre class="source lang-java linenums">package com.example.controller;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.json.simple.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.example.exceptions.IncompleteFormException;
+import com.example.exceptions.InvoiceGenException;
+import com.example.exceptions.PerfilBloqueadoException;
+import com.example.exceptions.UnexistentUser;
+import com.example.model.Facturas;
+import com.example.model.PedidoComanda;
+import com.example.model.Persona;
+import com.example.model.Plato;
+import com.example.model.Usuario;
+import com.example.model.Valoracion;
+import com.example.service.UsuarioService;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.itextpdf.layout.Document;
+
+@RestController
+@RequestMapping(&quot;/ticomo&quot;)
+@CrossOrigin(origins = {&quot;https://ticomo01man.web.app&quot;, &quot;http://localhost:4200&quot;})
+/*
+ * Esta clase actúa como un patrón de 
+ * diseño encargado de llamar al servicio de los usuarios
+ * para ejecutar sus funcionalidades
+ * */
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L44">public class UsuarioController {</span>
+	/*=============================================================================================*/
+	//VARIABLES
+	
+	//usuarioServ : variable que solo conoce el controlador y 
+	//que sirve para llamar al servicio de usuario
+	private static UsuarioService usuarioServ;
+    
+	@Autowired
+	public void setUsuarioService(UsuarioService usuarioServ) {
+<span class="fc" id="L54">		UsuarioController.usuarioServ = usuarioServ;</span>
+<span class="fc" id="L55">	}</span>
+    
+	/*
+	 * Este método es llamado por los usuarios que desean modificar sus datos a través
+	 * de la vista correspondiente
+	 * 
+	 * Controla excepciones y retorna un FORBIDDEN en caso de error.	  
+	 * */
+	@PostMapping(&quot;/guardarUsuarios&quot;)
+	public void saveUser(@RequestBody Usuario usuario) {
+		try {
+<span class="nc" id="L66">			usuarioServ.saveUseR(usuario);</span>
+<span class="nc" id="L67">		}catch(Exception e) {</span>
+<span class="nc" id="L68">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L69">		}</span>
+<span class="nc" id="L70">	}</span>
+	
+	/*
+	 * Este método retorna un opcional que, puede o no, contener un usuario el cual ha sido buscado en el 
+	 * repositorio mediante su NIF de usuario.
+	 * 
+	 * Controla excepciones y retorna un BAD_REQUEST en caso de error.	  
+	 * */
+	@GetMapping(&quot;/usuarios/{nif}&quot;)
+	public Optional&lt;Usuario&gt; findById(@PathVariable String nif) {
+		try {
+<span class="nc" id="L81">			return usuarioServ.findById(nif);</span>
+<span class="nc" id="L82">		}catch(Exception e) {</span>
+<span class="nc" id="L83">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+			}
+	}
+	
+	/*Método que actualiza el usuario desde un form*/
+	@PostMapping(&quot;/updateUser&quot;)
+	public void update(@RequestBody Usuario usuario) throws IncompleteFormException {
+		try {
+<span class="nc" id="L91">			usuarioServ.updateForm(usuario);</span>
+<span class="nc" id="L92">		}catch(Exception e) {</span>
+<span class="nc" id="L93">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L94">		}</span>
+		
+<span class="nc" id="L96">	}</span>
+	
+	/*Método que actualiza los intentos del usuario. Se puede llamar a mano aunque este caso nunca se contemple*/
+	@PostMapping(&quot;/updateUserIntentos&quot;)
+	public void updateUserIntentos(@RequestBody String email,int intentos) {
+		try {
+<span class="nc" id="L102">			usuarioServ.updateUserIntentos(email,intentos);</span>
+<span class="nc" id="L103">		}catch(Exception e) {</span>
+<span class="nc" id="L104">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+<span class="nc" id="L105">		}</span>
+<span class="nc" id="L106">	}</span>
+	
+	/*Método que borra un usuario por su nif*/
+	@DeleteMapping(&quot;/deleteUsuarios/{nif}&quot;)
+	public void deleteById(@PathVariable String nif) {
+<span class="nc" id="L111">		usuarioServ.deleteById(nif);</span>
+<span class="nc" id="L112">	}</span>
+	
+	/*Método que consulta un usuario por su email*/
+	@GetMapping(&quot;/consultaPorEmail/{email}&quot;)
+	public Optional&lt;Usuario&gt; consultaPorEmail(@PathVariable String email) {
+		try {
+<span class="nc" id="L118">			return usuarioServ.findByEmail(email);</span>
+<span class="nc" id="L119">		}catch(Exception e) {</span>
+<span class="nc" id="L120">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+			}
+	}
+	
+	/*Método para bloquear usuarios*/
+	@PostMapping(&quot;/lockUser&quot;)
+	public void lockUser(@RequestBody Usuario user) throws PerfilBloqueadoException
+	{
+		try {
+<span class="nc" id="L129">			Persona aux = user;</span>
+<span class="nc" id="L130">			usuarioServ.lockPerson(aux);</span>
+<span class="nc" id="L131">		}catch(Exception e) {</span>
+<span class="nc" id="L132">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="nc" id="L133">		}</span>
+<span class="nc" id="L134">	}</span>
+	
+	/*Método para bloquear usuarios*/
+	@PostMapping(&quot;/unlockUser&quot;) 
+	public void unlockUser(@RequestBody Usuario user) throws PerfilBloqueadoException
+	{
+		try {
+<span class="nc" id="L141">			Persona aux = user;</span>
+<span class="nc" id="L142">			usuarioServ.unlockPerson(aux);</span>
+<span class="nc" id="L143">		}catch(Exception e) {</span>
+<span class="nc" id="L144">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="nc" id="L145">		}</span>
+<span class="nc" id="L146">	}</span>
+	
+	/*Método que permite a un usuario realizar un pedido*/
+	@SuppressWarnings(&quot;unchecked&quot;)
+	@PostMapping(&quot;/realizarPedido&quot;)
+	public JSONObject realizarPedido(@RequestBody Object map) {
+		try {
+			
+<span class="fc" id="L154">			Map&lt;String, String&gt; pedido = (Map&lt;String, String&gt;) map;</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">			if(pedido.isEmpty())</span>
+<span class="nc" id="L156">				throw new IncompleteFormException(&quot;El pedido no puede estar vacío.&quot;);</span>
+			
+<span class="fc bfc" id="L158" title="All 2 branches covered.">			for (Map.Entry&lt;String, String&gt; entry : pedido.entrySet() ) {</span>
+				
+<span class="fc" id="L160">			    String key = entry.getKey();</span>
+<span class="fc" id="L161">			    String value = entry.getValue();</span>
+			    
+<span class="pc bpc" id="L163" title="2 of 4 branches missed.">			    if(key.isEmpty() || value.isEmpty())</span>
+<span class="nc" id="L164">			    	throw new IncompleteFormException(&quot;Puede que el pedido contenga información, pero faltan datos en el pedido&quot;);</span>
+			    
+<span class="fc" id="L166">			}</span>
+<span class="fc" id="L167">			PedidoComanda aux = usuarioServ.realizarPedido(pedido); </span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">			if(Boolean.TRUE.equals(aux.getComanda().isEmpty()))</span>
+<span class="nc" id="L169">		    	throw new IncompleteFormException(&quot;Puede que el pedido no contenga información, faltan datos en el pedido&quot;);</span>
+
+<span class="fc" id="L171">			Map&lt;String,Document&gt; docAux = usuarioServ.pedirFactura(aux);</span>
+			
+<span class="fc" id="L173">			docAux.remove(&quot;documento&quot;);</span>
+<span class="fc" id="L174">			String url = &quot;&quot;;</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">			for ( Map.Entry&lt;String, Document&gt; entry : docAux.entrySet() ) {</span>
+				
+<span class="fc" id="L177">				url = entry.getKey();</span>
+				
+<span class="fc" id="L179">			}</span>
+<span class="fc" id="L180">			JSONObject obj = new JSONObject();</span>
+<span class="fc" id="L181">			obj.put(&quot;url&quot;, url);</span>
+<span class="fc" id="L182">			return obj;</span>
+			
+<span class="fc" id="L184">		}catch(Exception e) {</span>
+<span class="fc" id="L185">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+		}
+	}
+
+	/*
+     * Método para cambiar el estado de un pedido al haberlos consultado por si están en reparto.
+     * */
+    @PostMapping(&quot;/consultarPedidosPendientes&quot;)
+    public void cambiarEstadoPedido(@RequestBody PedidoComanda pedido) {
+    	  try {
+<span class="nc" id="L195">    		  usuarioServ.cambiarEstadoPedido(pedido); </span>
+<span class="nc" id="L196">    		  }catch(Exception e) {</span>
+<span class="nc" id="L197">              throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="nc" id="L198">          }</span>
+         
+<span class="nc" id="L200">    }</span>
+    
+    @PostMapping(&quot;/modificarPedido&quot;)
+    public void modificarPedido(@RequestBody PedidoComanda pedido) {
+    	  try {
+<span class="fc" id="L205">    		  usuarioServ.modificarPedido(pedido); </span>
+<span class="fc" id="L206">    		  }catch(Exception e) {</span>
+<span class="fc" id="L207">              throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="fc" id="L208">          }</span>
+<span class="fc" id="L209">    }</span>
+    
+    /*
+     * Método que permite al cliente consultar sus pedidos en reparto 
+     * */
+    @PostMapping(&quot;/consultarMisPedidosPendientes&quot;)
+    public List&lt;PedidoComanda&gt; consultarMisPedidosPendientes(@RequestBody String cliente){
+        try {
+<span class="nc" id="L217">            return usuarioServ.consultarMisPedidosEnReparto(cliente);</span>
+<span class="nc" id="L218">        }catch(Exception e) {</span>
+<span class="nc" id="L219">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+        }
+    }
+
+    /*
+     * Método que permite al cliente consultar sus pedidos en reparto 
+     * */
+    @PostMapping(&quot;/consultarMisPedidos&quot;)
+    public List&lt;PedidoComanda&gt; consultarMisPedidos(@RequestBody String cliente){
+        try {
+<span class="nc" id="L229">        	List&lt;PedidoComanda&gt; l = usuarioServ.consultarMisPedidos(cliente);</span>
+        	
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        	if(l.isEmpty())</span>
+<span class="nc" id="L232">        		throw new UnexistentUser(&quot;No tienes pedidos en este apartado&quot;);</span>
+        	
+<span class="nc" id="L234">            return l ;</span>
+<span class="nc" id="L235">        }catch(Exception e) {</span>
+<span class="nc" id="L236">            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+        }
+    }
+
+	/*Método que consulta las facturas del usuario dando el id del pedido*/
+	@PostMapping(&quot;/consultarFacturasPorId&quot;)
+	public void consultarFacturaPorId(@RequestBody String idPedido){
+		try {
+			
+<span class="nc" id="L245">			 Optional&lt;Facturas&gt; factura = usuarioServ.findByidPedido(idPedido);</span>
+<span class="nc" id="L246">			 Optional&lt;PedidoComanda&gt; pedido = usuarioServ.consultarPedidoPorId(idPedido);</span>
+			 
+<span class="nc bnc" id="L248" title="All 4 branches missed.">			 if(!factura.isPresent() || !pedido.isPresent())</span>
+<span class="nc" id="L249">				 throw new InvoiceGenException(&quot;No se pudo generar las facturas. No hay facturas o no hay ese pedido&quot;);</span>
+			 
+<span class="nc" id="L251">			usuarioServ.consultarFacturasPorIdPedido(idPedido);</span>
+			
+			 
+<span class="nc" id="L254">		}catch(Exception e) {</span>
+<span class="nc" id="L255">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="nc" id="L256">		}</span>
+<span class="nc" id="L257"> 	}</span>
+	
+	/*Método para que el usuario consulte el nombre de un plato*/
+	@PostMapping(&quot;/consultarIdPorNombrePlato&quot;)
+	public Plato consultarPlato(@RequestBody String nombre) {
+		try {
+<span class="nc" id="L263">			return usuarioServ.consultarIdPorNombrePlato(nombre);</span>
+<span class="nc" id="L264">		}catch(Exception e) {</span>
+<span class="nc" id="L265">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+	}
+	
+	/* Método para que el usuario valore al restaurante y rider */
+	@PostMapping(&quot;/valoracionPedido&quot;)
+	public Valoracion valorarRestaurante(@RequestBody Valoracion valoracion) {
+		try {
+<span class="nc" id="L273">			return usuarioServ.valorarPedido(valoracion);</span>
+<span class="nc" id="L274">		} catch (Exception e) {</span>
+<span class="nc" id="L275">			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());</span>
+		}
+	}
+	
+	/* Método para que el usuario consulte la valoracion del restaurante y rider */
+	@GetMapping(&quot;/valoracionPedido/{idPedido}&quot;)
+	public Optional&lt;Valoracion&gt; consultarValoracion(@PathVariable String idPedido) {
+		try {
+<span class="nc" id="L283">			return usuarioServ.consultarValoracion(idPedido);</span>
+<span class="nc" id="L284">		}catch(Exception e) {</span>
+<span class="nc" id="L285">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+		}
+	}
+
+	/* Método para que el usuario anule el pedido */
+	@DeleteMapping(&quot;/anularPedido/{id}&quot;)
+	public void deletePedidoByid(@PathVariable String id) {
+		try {
+<span class="fc" id="L293">			usuarioServ.deleteOrder(id);</span>
+<span class="fc" id="L294">		} catch (Exception e) {</span>
+<span class="fc" id="L295">			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());</span>
+<span class="fc" id="L296">		}	</span>
+<span class="fc" id="L297">	}</span>
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

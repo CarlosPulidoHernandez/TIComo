@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.service</a> &gt; <span class="el_source">AdminService.java</span></div><h1>AdminService.java</h1><pre class="source lang-java linenums">package com.example.service;
+
+import java.util.List;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.example.exceptions.*;
+import com.example.model.Administrator;
+import com.example.model.PedidoComanda;
+import com.example.model.Persona;
+import com.example.repository.AdminRepository;
+import com.example.repository.PedidosRepository;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+@Service
+@RequestMapping(&quot;/administrators&quot;)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+/*Clase que representa al servicio que da las funcionalidades a los administradores*/
+<span class="fc" id="L21">public class AdminService {</span>
+	/*==========================================*/
+	//VARIABLES
+	//adminRepo : variable que solo conoce el servicio de administradores y que realiza consultas a la BBDD con respecto a Admins
+	//Anota Autowired para instanciarse automáticamente al iniciar Spring
+	@Autowired
+	private AdminRepository adminRepo;
+	//pedidosRepo : permite hacer consultas al repositorio de pedidos
+	@Autowired 
+	private PedidosRepository pedidosRepo;
+	//checkSecurity : objeto que se encarga de llamar a métodos que se usan para revisar la seguridad del sistema u otras funcionalidades
+<span class="fc" id="L32">	private SecurityMethods checkSecurity = new SecurityMethods();</span>
+	
+<span class="fc" id="L34">	private String tokenStr = &quot;admin&quot;;</span>
+<span class="fc" id="L35">	private String errorToken = &quot;Invalid admin token.&quot;;</span>
+	/*======================================================================*/
+	//MÉTODOS
+	
+	/*
+	 * 
+	 * Este método se encarga de revisar que un administrador es válido para guardar datos referentes a su perfil en el repositorio,
+	 * así como para crear administradores.
+	 * 
+	 * Controla excepciones de YaEnUsoException, contraseniaIncorrecta y InvalidEmailException
+	 * 
+	 * */
+	public void saveAdmin(Administrator admin) 
+			throws YaEnUsoException, ContraseniaIncorrectaException, InvalidEmailException {
+		
+<span class="nc" id="L50">		Optional&lt;Administrator&gt; possibleAdmin = adminRepo.findByEmail(admin.getEmail());</span>
+		
+<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (possibleAdmin.isPresent())</span>
+<span class="nc" id="L53">			throw new YaEnUsoException(&quot;El email que has introducido ya existe&quot;);</span>
+
+<span class="nc bnc" id="L55" title="All 2 branches missed.">		if(Boolean.FALSE.equals(checkSecurity.validEmail(admin.getEmail()))) {</span>
+<span class="nc" id="L56">			throw new InvalidEmailException(&quot;El email no corresponde con uno válido&quot;);</span>
+		}
+		
+<span class="nc" id="L59">		checkSecurity.restriccionesContraseniaAdmin(admin);</span>
+<span class="nc" id="L60">		checkSecurity.equalPass(admin.getContrasenia(), admin.getContraseniaDoble());</span>
+<span class="nc" id="L61">		admin.setContrasenia(checkSecurity.cifradoContrasenia(admin.getContrasenia()));	</span>
+<span class="nc" id="L62">		admin.setContraseniaDoble(checkSecurity.cifradoContrasenia(admin.getContrasenia()));	</span>
+<span class="nc" id="L63">		admin.setIntentos(5);</span>
+<span class="nc" id="L64">		adminRepo.insert(admin);	</span>
+<span class="nc" id="L65">	}</span>
+	
+	/*Este método es utilizado por los administradores para desbloquear usuarios y riders*/
+	public void unlockPerson(Persona usuario, String token) throws NonAdminValidationException 
+	{
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if(!token.toLowerCase().contains(this.tokenStr))</span>
+<span class="nc" id="L71">			throw new NonAdminValidationException(this.errorToken);</span>
+<span class="nc" id="L72">		usuario.setIntentos(5);</span>
+		
+<span class="nc" id="L74">	}</span>
+	
+	/*Este método es utilizado por los administradores para desbloquear otros administradores*/
+	public void unlockAdmin(Administrator admin, String token) throws NonAdminValidationException 
+	{
+<span class="nc bnc" id="L79" title="All 2 branches missed.">		if(!token.toLowerCase().contains(this.tokenStr))</span>
+<span class="nc" id="L80">			throw new NonAdminValidationException(this.errorToken);</span>
+<span class="nc" id="L81">		admin.setIntentos(5);</span>
+<span class="nc" id="L82">		adminRepo.save(admin);</span>
+<span class="nc" id="L83">	}</span>
+	
+	/*Este método es utilizado por los administradores para bloquear otros administradores*/
+	public void lockAdmin(Administrator admin, String token) throws NonAdminValidationException 
+	{
+<span class="nc bnc" id="L88" title="All 2 branches missed.">		if(!token.toLowerCase().contains(this.tokenStr))</span>
+<span class="nc" id="L89">			throw new NonAdminValidationException(this.errorToken);</span>
+<span class="nc" id="L90">		admin.setIntentos(0);</span>
+<span class="nc" id="L91">		adminRepo.save(admin);</span>
+
+<span class="nc" id="L93">	}</span>
+	
+	/*
+	 * 
+	 * Método que retorna un opcional que puede contener un Administrador buscado por email,
+	 *  así como no contener nada
+	 * 
+	 * */
+	public Optional&lt;Administrator&gt; findByEmail(String email){
+<span class="fc" id="L102">		return adminRepo.findByEmail(email);</span>
+	}
+
+	/*Método que actualiza a un admin en el repositorio*/
+	public void updateAdmnForm(Administrator admn) throws ContraseniaIncorrectaException, IncompleteFormException {
+		
+<span class="nc bnc" id="L108" title="All 4 branches missed.">		if (admn.getNombre().equals(&quot;&quot;) || admn.getApellidos().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L109" title="All 4 branches missed.">				|| admn.getContrasenia().equals(&quot;&quot;) || admn.getEmail().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L110" title="All 2 branches missed.">				|| admn.getZonaGeografica().equals(&quot;&quot;)) </span>
+<span class="nc" id="L111">			throw new IncompleteFormException(&quot;Introduzca todos los datos&quot;);</span>
+		
+<span class="nc bnc" id="L113" title="All 2 branches missed.">		if (!admn.getContraseniaDoble().isEmpty()) {</span>
+<span class="nc" id="L114">			checkSecurity.equalPass(admn.getContrasenia(), admn.getContraseniaDoble());</span>
+<span class="nc" id="L115">			admn.setContrasenia(checkSecurity.cifradoContrasenia(admn.getContrasenia()));</span>
+<span class="nc" id="L116">			admn.setContraseniaDoble(checkSecurity.cifradoContrasenia(admn.getContrasenia()));</span>
+		}
+		
+<span class="nc" id="L119">		checkSecurity.validEmail(admn.getEmail());</span>
+<span class="nc" id="L120">		checkSecurity.restriccionesContraseniaAdmin(admn);</span>
+<span class="nc" id="L121">		adminRepo.save(admn);</span>
+		
+<span class="nc" id="L123">	}</span>
+	/*
+	 * Método que llama al repositorio de pedidos para listar los pedidos de un restaurante
+	 * */
+	public List&lt;PedidoComanda&gt; findByidRestaurante(String idRestaurante) {
+<span class="nc" id="L128">		return pedidosRepo.findByidRestaurante(idRestaurante);</span>
+	}
+	
+	/*Método que actualiza los intentos del admin. Se suele llamar desde login pero se puede llamar a mano*/
+	public void updateAdmnIntentos(String email, int intentos) throws NonAdminValidationException {
+		
+<span class="nc" id="L134">		Optional&lt;Administrator&gt; admin = adminRepo.findByEmail(email);</span>
+		
+<span class="nc bnc" id="L136" title="All 2 branches missed.">		if(!admin.isPresent())</span>
+<span class="nc" id="L137">			throw new NonAdminValidationException(&quot;Imposible encontrar al admin&quot;);</span>
+		
+<span class="nc" id="L139">		admin.get().setIntentos(intentos);</span>
+		
+<span class="nc" id="L141">		adminRepo.save(admin.get());</span>
+		
+<span class="nc" id="L143">	}</span>
+
+	public List&lt;PedidoComanda&gt; consultarPedidosPorEstado(String estado) {
+<span class="nc" id="L146">		return pedidosRepo.findByestadoPedidoContaining(estado);</span>
+	}
+	
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>

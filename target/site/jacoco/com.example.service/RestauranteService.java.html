@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RestauranteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">TIComo_GP4</a> &gt; <a href="index.source.html" class="el_package">com.example.service</a> &gt; <span class="el_source">RestauranteService.java</span></div><h1>RestauranteService.java</h1><pre class="source lang-java linenums">package com.example.service;
+
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+import com.example.exceptions.IlegalNumberException;
+import com.example.exceptions.IncompleteFormException;
+import com.example.exceptions.UnexistentUser;
+import com.example.model.Facturas;
+import com.example.model.PedidoComanda;
+import com.example.model.Plato;
+import com.example.model.Restaurante;
+import com.example.repository.FacturasRepository;
+import com.example.repository.PedidosRepository;
+import com.example.repository.RestauranteRepository;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+
+/**
+ * Métodos invocados por el controlador que se encargan de revisar que los datos
+ * introducidos son correctos y de llamar al repositorio para realizar las
+ * operaciones CRUD
+ *
+ */
+@Service
+@RequestMapping(&quot;/Restaurantes&quot;)
+@JsonAutoDetect(fieldVisibility = Visibility.ANY)
+<span class="fc" id="L46">public class RestauranteService {</span>
+	/* ================================================ */
+	// VARIABLES
+	// restauranteRepo : permite acceder al repositorio de Restaurantes y hacer
+	// consultas a la BBDD. Solo lo conoce esta clase
+	@Autowired
+	private RestauranteRepository restauranteRepo;
+	// pedidosRepo : repositorio que guarda los pedidos
+	@Autowired
+	private PedidosRepository pedidosRepo;
+	// platoService : variable del tipo PlatoService que permite instanciar un
+	// objeto para acceder al servicio de platos
+	@Autowired
+	private PlatoService platoService;
+	// checkSecurity : objeto que comprobará aspectos de seguridad
+<span class="fc" id="L61">	private SecurityMethods checkSecurity = new SecurityMethods();</span>
+	// facturasRepo : repositorio de facturas para que el restaurante guarde las
+	// facturas.
+	@Autowired
+	private FacturasRepository facturasRepo;
+
+	static final String RUTA = &quot;./facturasPDF&quot;;
+	static final String RUTA2 = &quot;\\nuevaFacturaTicomoPedido&quot;;
+
+	/*
+	 * Este método se encarga de guardar restaurantes, ya sea para modificar sus
+	 * datos o registrarlos. Controla excepciones de emails y datos ya en uso
+	 * 
+	 */
+
+	public void saveRestaurante(Restaurante restaurante) throws IncompleteFormException {
+<span class="nc bnc" id="L77" title="All 4 branches missed.">		if (restaurante.getCif().equals(&quot;&quot;) || restaurante.getNombre().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L78" title="All 4 branches missed.">				|| restaurante.getEmailContacto().equals(&quot;&quot;) || restaurante.getCategoria().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">				|| restaurante.getDireccion().equals(&quot;&quot;))</span>
+<span class="nc" id="L80">			throw new IncompleteFormException(&quot;Faltan datos&quot;);</span>
+
+<span class="nc" id="L82">		checkSecurity.validEmail(restaurante.getEmailContacto());</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (restaurante.getId() != null) {</span>
+<span class="nc" id="L84">			restaurante.setId(null);</span>
+		}
+<span class="nc" id="L86">		restauranteRepo.insert(restaurante);</span>
+
+<span class="nc" id="L88">	}</span>
+
+	/**
+	 * Este metodo se encarga de encontrar al restaurante por su id
+	 */
+	public Optional&lt;Restaurante&gt; findByIdRestaurante(String id) {
+<span class="nc" id="L94">		return restauranteRepo.findById(id);</span>
+	}
+
+	/**
+	 * Método que se encarga de listar en la página todos los restaurantes que se
+	 * han registrado
+	 */
+	public List&lt;Restaurante&gt; findAllRestaurantes() {
+<span class="nc" id="L102">		return restauranteRepo.findAll();</span>
+	}
+
+	/**
+	 * Método que se encarga de borrar restaurante por su id
+	 */
+	public void deleteByIdRestaurante(String id) {
+<span class="nc" id="L109">		restauranteRepo.deleteById(id);</span>
+<span class="nc" id="L110">	}</span>
+
+	/**
+	 * Método en el cual se van a realizar los cambios en la base cuando
+	 * modifiquemos los datos de cualquier restaurante
+	 */
+	public void updateRestaurante(Restaurante restaurante) throws IncompleteFormException {
+
+<span class="nc bnc" id="L118" title="All 4 branches missed.">		if (restaurante.getCif().equals(&quot;&quot;) || restaurante.getNombre().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L119" title="All 4 branches missed.">				|| restaurante.getDireccion().equals(&quot;&quot;) || restaurante.getEmailContacto().equals(&quot;&quot;)</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">				|| restaurante.getCategoria().equals(&quot;&quot;))</span>
+<span class="nc" id="L121">			throw new IncompleteFormException(&quot;Introduce todos los datos.&quot;);</span>
+
+<span class="nc" id="L123">		checkSecurity.validEmail(restaurante.getEmailContacto());</span>
+
+<span class="nc" id="L125">		restauranteRepo.save(restaurante);</span>
+
+<span class="nc" id="L127">	}</span>
+
+	/**
+	 * Método el cual llamará al Servicio de Platos para que se realice el save de
+	 * un plato.
+	 */
+	public void savePlato(Plato plato) throws IncompleteFormException {
+<span class="nc" id="L134">		platoService.save(plato);</span>
+<span class="nc" id="L135">	}</span>
+
+	/**
+	 * Método el cual llamará al Servicio de Platos para obtener la lista de platos
+	 * de un restaurante mediante su ID.
+	 */
+	public List&lt;Plato&gt; getPlatosByIdRestaurante(String idRestaurante) {
+<span class="nc" id="L142">		return platoService.getPlatosByIdRestaurante(idRestaurante);</span>
+	}
+
+	/**
+	 * Método el cual llamará al Servicio de Platos para obtener un optional de
+	 * Plato mediante su ID.
+	 */
+	public Optional&lt;Plato&gt; findByIdPlato(String idPlato) {
+<span class="nc" id="L150">		return platoService.findById(idPlato);</span>
+	}
+
+	/**
+	 * Método el cual llamará al Servicio de Platos para eliminar un Plato mediante
+	 * su ID.
+	 */
+	public void deleteByIdPlato(String idPlato) {
+<span class="nc" id="L158">		platoService.deleteById(idPlato);</span>
+<span class="nc" id="L159">	}</span>
+
+	/**
+	 * Método el cual llamará al Servicio de Platos para actualizar un Plato.
+	 */
+	public void updatePlato(Plato plato) throws IncompleteFormException {
+<span class="nc" id="L165">		platoService.update(plato);</span>
+<span class="nc" id="L166">	}</span>
+
+	/* Método que prepara un nuevo pedido y calcula su precio */
+	public PedidoComanda prepararPedido(Map&lt;String, String&gt; comanda) throws IlegalNumberException {
+
+<span class="fc" id="L171">		Timestamp time = new Timestamp(System.currentTimeMillis());</span>
+<span class="fc" id="L172">		Date fecha = new Date(time.getTime());</span>
+<span class="fc" id="L173">		String nifCliente = comanda.get(&quot;nifCliente&quot;);</span>
+<span class="fc" id="L174">		comanda.remove(&quot;nifCliente&quot;);</span>
+<span class="fc" id="L175">		String idRestaurante = comanda.get(&quot;idRestaurante&quot;);</span>
+<span class="fc" id="L176">		comanda.remove(&quot;idRestaurante&quot;);</span>
+<span class="fc" id="L177">		double precioComanda = 0.0;</span>
+<span class="fc" id="L178">		String estadoPedido = &quot;PedidoHecho&quot;;</span>
+<span class="fc" id="L179">		PedidoComanda nuevoPedido = new PedidoComanda(null, comanda, estadoPedido, precioComanda, nifCliente,</span>
+				idRestaurante, fecha, &quot;&quot;);
+<span class="fc" id="L181">		nuevoPedido.setPrecioComanda(ajustarPrecioDePedido(nuevoPedido.getComanda()));</span>
+<span class="fc" id="L182">		pedidosRepo.insert(nuevoPedido);</span>
+<span class="fc" id="L183">		return nuevoPedido;</span>
+
+	}
+
+	// Método auxiliar que calculará el precio de la comanda realizada por el
+	// cliente
+	private double ajustarPrecioDePedido(Map&lt;String, String&gt; comanda) throws IlegalNumberException {
+
+<span class="fc" id="L191">		double precio = 0.0;</span>
+
+<span class="fc bfc" id="L193" title="All 2 branches covered.">		for (Map.Entry&lt;String, String&gt; entry : comanda.entrySet()) {</span>
+
+<span class="fc" id="L195">			String idPlato = entry.getKey();</span>
+<span class="fc" id="L196">			int numeroPlatos = Integer.parseInt(entry.getValue());</span>
+
+<span class="fc" id="L198">			Optional&lt;Plato&gt; platoPedido = platoService.findById(idPlato);</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">			if (Boolean.FALSE.equals(platoPedido.isPresent()))</span>
+<span class="fc" id="L200">				throw new IlegalNumberException(&quot;Error. El plato con id : &quot; + idPlato</span>
+						+ &quot; puede que no esté disponible para servir en este momento. Realize de nuevo el pedido&quot;);
+
+<span class="fc" id="L203">			precio += platoPedido.get().getPrecio() * numeroPlatos;</span>
+
+<span class="fc" id="L205">		}</span>
+<span class="fc" id="L206">		return precio;</span>
+	}
+
+	/* Método que lista todos los pedidos existentes */
+	public List&lt;PedidoComanda&gt; listarPedidos() {
+<span class="fc" id="L211">		return pedidosRepo.findAll();</span>
+	}
+
+	/* Método que lista todos los pedidos según la etiqueta/estado que tengan */
+	public List&lt;PedidoComanda&gt; listarPedidosPorEstado(String estado) {
+<span class="nc" id="L216">		return pedidosRepo.findByestadoPedidoContaining(estado);</span>
+	}
+	
+	/* Método que genera la factura al pedido */
+
+	public Map&lt;String, Document&gt; pedirFactura(PedidoComanda comanda) throws IncompleteFormException, IOException {
+		Facturas facturas;
+<span class="fc" id="L223">		facturas = new Facturas(&quot;Factura TIComo&quot;,comanda.getId(),comanda.getFecha(),comanda.getNifCliente());</span>
+<span class="fc" id="L224">		facturasRepo.save(facturas);</span>
+<span class="fc" id="L225">		return this.restauranteGeneraFactura(comanda, facturas);</span>
+	}
+
+	/* Método core de la clase que genera la factura de una comanda */
+	public Map&lt;String, Document&gt; restauranteGeneraFactura(PedidoComanda comanda, Facturas factura0)
+			throws IncompleteFormException, IOException {
+
+<span class="fc" id="L232">		PdfWriter teclado = new PdfWriter(RUTA + RUTA2 + comanda.getId() + &quot;.pdf&quot;);</span>
+<span class="fc" id="L233">		PdfDocument pdf = new PdfDocument(teclado);</span>
+<span class="fc" id="L234">		pdf.setDefaultPageSize(PageSize.A4);</span>
+<span class="fc" id="L235">		try (Document factura = new Document(pdf)) {</span>
+<span class="fc" id="L236">			float size = 285f;</span>
+<span class="fc" id="L237">			float size150 = size + 150f;</span>
+<span class="fc" id="L238">			float[] anchoColumna = { size, size150 };</span>
+			// Cabezera
+<span class="fc" id="L240">			Table tablaTitulo = new Table(anchoColumna);</span>
+<span class="fc" id="L241">			Table infoFactura = new Table(new float[] { size / 2, size / 2 });</span>
+
+<span class="fc" id="L243">			tablaTitulo.addCell(new Cell().add(new Paragraph(factura0.getTitulo())).setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L244">			infoFactura.addCell(new Cell().add(new Paragraph(&quot;factura Nº : &quot;)).setBold().setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L245">			infoFactura.addCell(new Cell().add(new Paragraph(factura0.getId()).setBorder(Border.NO_BORDER)));</span>
+<span class="fc" id="L246">			infoFactura.addCell(new Cell().add(new Paragraph(&quot;fecha factura : &quot;)).setBold().setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L247">			infoFactura.addCell(new Cell().add(new Paragraph(factura0.getFechaFactura().toString())).setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L248">			tablaTitulo.addCell(new Cell().add(infoFactura).setBorder(Border.NO_BORDER));</span>
+
+<span class="fc" id="L250">			factura.add(tablaTitulo);</span>
+<span class="fc" id="L251">			factura.add(new Paragraph(&quot;\n&quot;));</span>
+			// Divisor
+<span class="fc" id="L253">			Border divisor = new SolidBorder(1f / 2f);</span>
+<span class="fc" id="L254">			Table divisora = new Table(anchoColumna);</span>
+<span class="fc" id="L255">			divisora.setBorder(divisor);</span>
+
+<span class="fc" id="L257">			factura.add(divisora);</span>
+<span class="fc" id="L258">			factura.add(new Paragraph(&quot;\n&quot;));</span>
+
+			// Contenido del pedido
+
+<span class="fc" id="L262">			ArrayList&lt;String&gt; platos = new ArrayList&lt;&gt;(comanda.getComanda().size());</span>
+<span class="fc" id="L263">			ArrayList&lt;String&gt; numero = new ArrayList&lt;&gt;(comanda.getComanda().size());</span>
+<span class="fc" id="L264">			ArrayList&lt;String&gt; precios = new ArrayList&lt;&gt;(comanda.getComanda().size());</span>
+
+			// Lectura del pedido
+<span class="fc bfc" id="L267" title="All 2 branches covered.">			for (Map.Entry&lt;String, String&gt; entry : comanda.getComanda().entrySet()) {</span>
+
+<span class="fc" id="L269">				Optional&lt;Plato&gt; plato = platoService.findById(entry.getKey());</span>
+
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">				if (!plato.isPresent())</span>
+<span class="nc" id="L272">					throw new IncompleteFormException(&quot;Error al generar la factura&quot;);</span>
+
+<span class="fc" id="L274">				precios.add(Double.toString(plato.get().getPrecio()));</span>
+<span class="fc" id="L275">				platos.add(plato.get().getNombre());</span>
+<span class="fc" id="L276">				numero.add(entry.getValue());</span>
+
+<span class="fc" id="L278">			}</span>
+<span class="fc" id="L279">			float[] anchuraTablaComanda = { size, size, size };</span>
+<span class="fc" id="L280">			Table order = new Table(anchuraTablaComanda);</span>
+			// Subtabla Pedido
+<span class="fc" id="L282">			Float padding = 5f;  </span>
+<span class="fc" id="L283">			order.addCell(new Cell().add(new Paragraph(&quot;Tu pedido || &quot;)).setBold().setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L284">			order.addCell(new Cell().add(new Paragraph(&quot;Cantidad || &quot;)).setBold().setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L285">			order.addCell(new Cell().add(new Paragraph(&quot; Precio/Unidad &quot;)).setBold().setBorder(Border.NO_BORDER));</span>
+
+<span class="fc bfc" id="L287" title="All 2 branches covered.">			for (int i = 0; i &lt; platos.size(); i++) {</span>
+<span class="fc" id="L288">				order.addCell(new Cell().add(new Paragraph(platos.get(i)+&quot;\n&quot;)).setBorder(Border.NO_BORDER).setPadding(padding));</span>
+<span class="fc" id="L289">				order.addCell(new Cell().add(new Paragraph(precios.get(i)+&quot;\n &quot;)).setBorder(Border.NO_BORDER).setPadding(padding));</span>
+<span class="fc" id="L290">				order.addCell(new Cell().add(new Paragraph(numero.get(i)+&quot;\n&quot;)).setBorder(Border.NO_BORDER).setPadding(padding));</span>
+			}
+			//Subtabla cantidad
+<span class="fc" id="L293">			Table cantidad = new Table(new float[] { size });</span>
+			// Subtabla Precios
+<span class="fc" id="L295">			Table preciosTabla = new Table(new float[] { size });</span>
+
+<span class="fc" id="L297">			order.addCell(new Cell().add(cantidad).setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L298">			order.addCell(new Cell().add(preciosTabla).setBorder(Border.NO_BORDER));</span>
+
+<span class="fc" id="L300">			factura.add(order);</span>
+<span class="fc" id="L301">			factura.add(divisora);</span>
+<span class="fc" id="L302">			factura.add(new Paragraph(&quot;\n&quot;));</span>
+
+			// Precio total
+
+<span class="fc" id="L306">			order.addCell(new Cell()</span>
+<span class="fc" id="L307">					.add(new Paragraph(&quot;\n\n\n\n\t\t\t\t\tPrecio total : &quot;</span>
+<span class="fc" id="L308">							+ Double.toString(comanda.getPrecioComanda()) + &quot;€&quot;))</span>
+<span class="fc" id="L309">					.setBold().setBorder(Border.NO_BORDER));</span>
+<span class="fc" id="L310">			order.addCell(</span>
+<span class="fc" id="L311">					new Cell().add(new Paragraph(&quot;\n\n\t\t¡¡Gracias por usar nuestro servicio!!&quot;)</span>
+<span class="fc" id="L312">							.setBold().setBorder(Border.NO_BORDER)));</span>
+<span class="fc" id="L313">			factura.add(order);</span>
+<span class="fc" id="L314">			Map&lt;String, Document&gt; ret = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L315">			ret.put(&quot;documento&quot;, factura);</span>
+<span class="fc" id="L316">			String url = RUTA + RUTA2 + comanda.getId() + &quot;.pdf&quot;;</span>
+<span class="fc" id="L317">			ret.put(RUTA + RUTA2 + comanda.getId() + &quot;.pdf&quot;, null);</span>
+<span class="fc" id="L318">			Runtime rt = Runtime.getRuntime();</span>
+			
+<span class="fc" id="L320">			rt.exec(&quot;rundll32 url.dll,FileProtocolHandler &quot; + url);</span>
+		
+
+<span class="fc" id="L323">		return ret;</span>
+		}
+	}
+	
+	
+
+	/* Método que consulta al repositorio de pedidos por un id de pedido */
+	public Optional&lt;PedidoComanda&gt; consultarPedidoPorId(String idPedido) {
+<span class="nc" id="L331">		return pedidosRepo.findById(idPedido);</span>
+	}
+
+	/* Método que consulta un nombre de plato dado su id */
+	public Plato consultarIdPorNombrePlato(String nombre) throws IlegalNumberException {
+<span class="nc" id="L336">		return platoService.consultarIdPorNombrePlato(nombre);</span>
+	}
+
+	/* Método que comprueba si el restaurante todavía no ha sido valorado */
+	public boolean isPrimeraValoracion(String id) throws UnexistentUser {
+<span class="nc" id="L341">		boolean first = false;</span>
+<span class="nc" id="L342">		Optional&lt;Restaurante&gt; restaurante = restauranteRepo.findById(id);</span>
+		
+<span class="nc bnc" id="L344" title="All 2 branches missed.">		if(!restaurante.isPresent())</span>
+<span class="nc" id="L345">			throw new UnexistentUser(&quot;No existe ese restaurante por valoración&quot;);</span>
+		
+<span class="nc bnc" id="L347" title="All 2 branches missed.">		if (restaurante.get().getValoracionMedia() == 0) {</span>
+<span class="nc" id="L348">			first = true;</span>
+		}
+<span class="nc" id="L350">		return first;</span>
+	}
+
+	public List&lt;PedidoComanda&gt; getPedidosByIdRestaurante(String idRestaurante, String estado) {
+<span class="nc" id="L354">		List&lt;PedidoComanda&gt; totalPedidos = pedidosRepo.findAll();</span>
+<span class="nc" id="L355">		List&lt;PedidoComanda&gt; pedidosRestaurante = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L356">		List&lt;PedidoComanda&gt; pedidosEstado = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L357" title="All 2 branches missed.">		for(int i =0; i&lt; totalPedidos.size();i++) {</span>
+<span class="nc bnc" id="L358" title="All 2 branches missed.">			if (idRestaurante.equalsIgnoreCase(totalPedidos.get(i).getIdRestaurante())) {</span>
+<span class="nc" id="L359">				pedidosRestaurante.add(totalPedidos.get(i));</span>
+			}
+		}
+<span class="nc bnc" id="L362" title="All 2 branches missed.">		for(int i =0; i&lt; pedidosRestaurante.size();i++) {</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">			if (estado.equalsIgnoreCase(pedidosRestaurante.get(i).getEstadoPedido())) {</span>
+<span class="nc" id="L364">				pedidosEstado.add(pedidosRestaurante.get(i));</span>
+			}
+		}
+<span class="nc" id="L367">		return pedidosEstado;</span>
+	}
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.4.201905082037</span></div></body></html>
